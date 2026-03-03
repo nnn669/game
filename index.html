@@ -1,0 +1,3027 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>虚拟币交易模拟器 (全功能修复版)</title>
+    <style>
+        :root {
+            --bg-light: #f0f4f8;
+            --glass-bg: rgba(255,255,255,0.85);
+            --glass-border: rgba(0,0,0,0.1);
+            --text-dark: #1a202c;
+            --text-mute: #6b7280;
+            --border-color: #e2e8f0;
+            --up-color: #ff4757;
+            --down-color: #2ed573;
+            --glass-blur: blur(20px);
+            --grid-color: #eaecef;
+            /* 新增：总资产卡片蓝色渐变变量 */
+            --card-blue-gradient: linear-gradient(135deg, rgba(30, 58, 138, 0.85), rgba(59, 130, 246, 0.8), rgba(96, 165, 250, 0.75));
+            /* 出海功能专属样式变量 - 同主题玻璃质感 */
+            --oversea-card-bg: rgba(30, 58, 138, 0.9);
+            --oversea-card-border: rgba(255,255,255,0.25);
+            --oversea-text-light: rgba(255,255,255,0.9);
+            --oversea-text-mute: rgba(255,255,255,0.7);
+            --oversea-btn-bg: rgba(255,255,255,0.15);
+            --oversea-btn-border: rgba(255,255,255,0.3);
+            --oversea-btn-active: rgba(59, 130, 246, 0.8);
+            --small-country-border: rgba(0, 150, 255, 0.4);
+            --mid-country-border: rgba(255, 193, 7, 0.4);
+            --high-country-border: rgba(255, 80, 80, 0.4);
+        }
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            margin: 0;
+            padding: 0;
+        }
+        body, html {
+            width: 100%;
+            height: 100%;
+            background: var(--bg-light);
+            color: var(--text-dark);
+            font-family: -apple-system, "PingFang SC", sans-serif;
+            overflow: hidden;
+        }
+        #app {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            max-width: 500px;
+            margin: 0 auto;
+            position: relative;
+            background: var(--bg-light);
+        }
+        /* ==================== 修改：总资产卡片 蓝色渐变玻璃质感 ==================== */
+        .main-glass-card {
+            margin: 20px;
+            border-radius: 24px;
+            /* 蓝色渐变背景，带透明度保证玻璃通透感 */
+            background: var(--card-blue-gradient);
+            /* 核心玻璃模糊效果保留 */
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            /* 玻璃高光边框，增强质感 */
+            border: 1.5px solid rgba(255,255,255,0.2);
+            /* 适配蓝色渐变的柔和阴影 */
+            box-shadow: 0 8px 32px rgba(30, 58, 138, 0.25);
+            overflow: hidden;
+            position: relative;
+            padding: 28px 24px;
+        }
+        /* 适配蓝色背景的文字颜色，保证可读性 */
+        .main-glass-card .total-label { 
+            font-size: 12px; 
+            color: rgba(255,255,255,0.7); 
+            font-weight: 500; 
+            margin-bottom: 4px; 
+        }
+        .main-glass-card .total-amount { 
+            font-size: 28px; 
+            font-weight: 700; 
+            color: #ffffff; 
+            letter-spacing: -1px; 
+            margin-bottom: 8px; 
+        }
+        .main-glass-card .available-section { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            font-size: 12px; 
+            color: rgba(255,255,255,0.9); 
+            font-weight: 500; 
+        }
+        .main-glass-card .available-value { 
+            font-weight: 600; 
+            color: #ffffff; 
+        }
+        /* ==================== 出海功能样式 - 同主题玻璃质感 ==================== */
+        .oversea-total-card {
+            margin: 20px;
+            border-radius: 24px;
+            background: var(--oversea-card-bg);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            border: 1.5px solid var(--oversea-card-border);
+            box-shadow: 0 8px 32px rgba(30, 58, 138, 0.3);
+            padding: 28px 24px;
+            color: #fff;
+        }
+        .oversea-total-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .oversea-total-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            font-size: 16px;
+        }
+        .oversea-total-item:last-child {
+            border-bottom: none;
+        }
+        .oversea-total-item .label {
+            color: var(--oversea-text-mute);
+        }
+        .oversea-total-item .value {
+            color: var(--oversea-text-light);
+            font-weight: 600;
+        }
+        .oversea-transfer-btn {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--oversea-btn-border);
+            border-radius: 12px;
+            background: var(--oversea-btn-bg);
+            color: #fff;
+            font-weight: 600;
+            font-size: 14px;
+            margin-top: 15px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .oversea-transfer-btn:active {
+            background: var(--oversea-btn-active);
+            border-color: #fff;
+        }
+        .oversea-fee-tip {
+            font-size: 12px;
+            color: var(--oversea-text-mute);
+            text-align: center;
+            margin-top: 8px;
+        }
+        /* 新增：余额转入按钮样式 */
+        .oversea-transfer-in-btn {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #2ed573;
+            border-radius: 12px;
+            background: rgba(46, 213, 115, 0.15);
+            color: #2ed573;
+            font-weight: 600;
+            font-size: 14px;
+            margin-top: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .oversea-transfer-in-btn:active {
+            background: #2ed573;
+            color: #fff;
+        }
+        .oversea-transfer-in-tip {
+            font-size: 12px;
+            color: var(--oversea-text-mute);
+            text-align: center;
+            margin-top: 8px;
+        }
+        .oversea-country-card {
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            border: 1.5px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 20px;
+            margin: 10px 5px;
+            position: relative;
+        }
+        .oversea-country-card.small {
+            border-left: 4px solid var(--small-country-border);
+        }
+        .oversea-country-card.mid {
+            border-left: 4px solid var(--mid-country-border);
+        }
+        .oversea-country-card.high {
+            border-left: 4px solid var(--high-country-border);
+        }
+        .oversea-country-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .oversea-price-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            margin: 8px 0;
+        }
+        .oversea-price-row .value {
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+        .oversea-enter-btn {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #3b82f6;
+            border-radius: 10px;
+            background: rgba(59,130,246,0.1);
+            color: #3b82f6;
+            font-weight: 600;
+            font-size: 13px;
+            margin: 10px 0;
+            cursor: pointer;
+        }
+        .oversea-invest-section {
+            margin: 15px 0;
+        }
+        .oversea-invest-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        .oversea-invest-input {
+            width: 100%;
+            background: rgba(255,255,255,0.6);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 10px 12px;
+            color: var(--text-dark);
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        .oversea-invest-btn {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 10px;
+            background: var(--down-color);
+            color: #fff;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+        }
+        .oversea-withdraw-invest-btn {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 10px;
+            background: #ffc107;
+            color: #1a202c;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+        }
+        .oversea-invest-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .oversea-reward-tip {
+            font-size: 12px;
+            color: var(--text-mute);
+            margin-top: 8px;
+        }
+        .oversea-trade-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin: 15px 0 10px 0;
+        }
+        .oversea-slider-value {
+            text-align: center;
+            font-size: 13px;
+            font-weight: 600;
+            color: #3b82f6;
+            margin-top: 5px;
+        }
+        .oversea-trade-btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+        }
+        .oversea-trade-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            color: #fff;
+        }
+        .oversea-buy-btn {
+            background: var(--down-color);
+        }
+        .oversea-sell-btn {
+            background: var(--up-color);
+        }
+        /* 出海弹窗样式 - 同主题 */
+        .oversea-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        .oversea-modal-content {
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            border: 1.5px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 30px 24px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+        }
+        .oversea-modal-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 20px;
+        }
+        .oversea-modal-desc {
+            font-size: 16px;
+            color: var(--text-dark);
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+        .oversea-modal-btn-group {
+            display: flex;
+            gap: 15px;
+        }
+        .oversea-modal-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .oversea-modal-confirm {
+            background: #3b82f6;
+            color: #fff;
+        }
+        .oversea-modal-cancel {
+            background: var(--glass-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-dark);
+        }
+        /* ==================== 修改结束，以下所有样式完全保留原有 ==================== */
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            border: 1.5px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 20px;
+            margin: 10px 5px;
+        }
+        .total-section { text-align: left; }
+        .view-container { flex: 1; overflow-y: auto; padding: 0 15px 180px 15px; }
+        .view-section { display: none; }
+        .view-section.active { display: block; }
+        .event-area {
+            margin: 10px 5px;
+        }
+        .event-list {
+            min-height: 30px;
+            font-size: 13px;
+            color: var(--text-dark);
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            padding: 5px 0;
+        }
+        .event-item {
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 8px 12px;
+            font-weight: 500;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+        }
+        .event-item.up {
+            color: var(--down-color);
+            border-left: 4px solid var(--down-color);
+        }
+        .event-item.down {
+            color: var(--up-color);
+            border-left: 4px solid var(--up-color);
+        }
+        .event-item.liquidation {
+            color: #ffa502;
+            border-left: 4px solid #ffa502;
+        }
+        .event-divider {
+            border: 0;
+            border-top: 1px solid var(--border-color);
+            margin: 8px 0;
+        }
+        .function-row {
+            display: flex;
+            gap: 12px;
+            margin: 15px 5px;
+        }
+        .function-card {
+            flex: 1;
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            border: 1.5px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.1s ease;
+        }
+        .function-card:active { transform: scale(0.98); }
+        .function-card .emoji { font-size: 24px; margin-bottom: 6px; }
+        .function-card .name { font-weight: 600; color: var(--text-dark); }
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 12px 5px;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-dark);
+            cursor: pointer;
+            margin-bottom: 5px;
+        }
+        .back-button::before { content: '←'; font-size: 20px; margin-right: 4px; }
+        .bank-item {
+            margin-bottom: 16px;
+        }
+        .bank-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 4px;
+        }
+        .bank-row .label {
+            font-size: 14px;
+            color: var(--text-mute);
+        }
+        .bank-row .value {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+        .rate-row {
+            font-size: 12px;
+            display: flex;
+            justify-content: flex-start;
+            gap: 6px;
+            color: var(--text-mute);
+            height: 18px;
+        }
+        .rate-row .rate-label {
+            color: var(--text-mute);
+        }
+        .rate-row .rate-percent {
+            color: var(--down-color);
+        }
+        .rate-row .loan-percent {
+            color: var(--up-color);
+        }
+        .mining-overview {
+            display: flex;
+            justify-content: space-between;
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+        .mining-overview-item {
+            text-align: center;
+        }
+        .mining-overview-label {
+            font-size: 11px;
+            color: var(--text-mute);
+        }
+        .mining-overview-value {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+        .device-card {
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+        .device-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .device-name {
+            font-weight: 700;
+            font-size: 16px;
+        }
+        .device-status {
+            font-size: 12px;
+            padding: 2px 8px;
+            border-radius: 12px;
+            margin-left: 8px;
+            background: var(--down-color);
+            color: white;
+        }
+        .device-count {
+            background: rgba(0,0,0,0.05);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+        }
+        .device-details {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--text-mute);
+            margin-bottom: 12px;
+        }
+        .device-actions {
+            display: flex;
+            gap: 8px;
+        }
+        .device-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+        }
+        .btn-unlock {
+            background: var(--down-color);
+            color: white;
+        }
+        .btn-expand {
+            background: #3b82f6;
+            color: white;
+        }
+        .btn-disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .stock-item { border-bottom: 1px solid var(--border-color); }
+        .stock-info-row { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 20px 5px 5px 5px;
+            cursor: pointer; 
+            z-index: 10;
+            position: relative;
+        }
+        .symbol-area {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .symbol { 
+            font-weight: 700; 
+            font-size: 17px; 
+            color: var(--text-dark); 
+        }
+        .price-change-compact {
+            font-weight: 700;
+            font-size: 14px;
+        }
+        .holding-badge { 
+            display: inline-block; 
+            background: rgba(0,0,0,0.05); 
+            color: var(--text-dark); 
+            font-size: 10px; 
+            font-weight: 700; 
+            padding: 3px 8px; 
+            border-radius: 6px; 
+            margin-top: 2px;
+            border: 1px solid rgba(0,0,0,0.05); 
+        }
+        .profit-green { color: var(--down-color); }
+        .profit-red { color: var(--up-color); }
+        .price { 
+            font-weight: 700; 
+            font-size: 16px; 
+            color: var(--text-dark); 
+        }
+        .price-return { 
+            font-size: 12px; 
+            margin-top: 4px; 
+            text-align: right; 
+            font-weight: bold;
+        }
+        .details-area { 
+            max-height: 0; 
+            opacity: 0; 
+            overflow: hidden; 
+            transition: all 0.3s ease-in-out;
+            background: #fff; 
+            border-radius: 16px; 
+            border: 1px solid var(--border-color); 
+            margin-top: 0;
+        }
+        .stock-item.active .details-area { 
+            max-height: 900px; 
+            opacity: 1; 
+            margin: 12px 0 16px 0;
+            padding: 16px; 
+        }
+        .chart-wrapper { 
+            height: 160px; 
+            width: 100%; 
+            margin-bottom: 15px; 
+            background: #fff; 
+            border-radius: 12px; 
+            overflow: hidden; 
+            position: relative; 
+        }
+        canvas { width: 100% !important; height: 100% !important; display: block; }
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+        .zoom-btn {
+            background: var(--glass-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 4px 12px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-dark);
+            cursor: pointer;
+            backdrop-filter: var(--glass-blur);
+        }
+        .zoom-btn.active {
+            background: var(--text-dark);
+            color: white;
+        }
+        input[type=range] { width: 100%; accent-color: var(--text-dark); height: 6px; background: var(--border-color); border-radius: 3px; outline: none; margin-top: 8px; }
+        .btn-row { display: flex; gap: 10px; margin-top: 12px; }
+        .btn { flex: 1; padding: 14px; border: none; border-radius: 12px; color: #fff; font-weight: 700; font-size: 14px; cursor: pointer; transition: transform 0.1s ease; }
+        .btn:active { transform: scale(0.98); }
+        .btn-buy { background: var(--down-color); }
+        .btn-sell { background: var(--up-color); }
+        .btn-long { background: #3b82f6; }
+        .btn-short { background: #f59e0b; }
+        .btn-close { background: #6b7280; }
+        .btn-deposit { background: var(--down-color); }
+        .btn-withdraw { background: var(--up-color); }
+        .btn-liquidate { background: #ff3742; margin-top: 8px; }
+        .bottom-nav {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            border-top: 1px solid var(--glass-border);
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            padding: 5px 3px;
+            z-index: 110;
+        }
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255,255,255,0.2);
+            border-radius: 16px;
+            padding: 8px 3px;
+            color: var(--text-mute);
+            font-size: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            border: 1px solid transparent;
+        }
+        .nav-item.active {
+            background: rgba(0,0,0,0.1);
+            color: var(--text-dark);
+            border-color: var(--glass-border);
+        }
+        .nav-item .emoji {
+            font-size: 12px;
+            margin-bottom: 6px;
+        }
+        .asset-box {
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 20px;
+            margin: 10px 5px;
+        }
+        .asset-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .asset-item small { color: var(--text-mute); font-size: 11px; }
+        .asset-item b { font-size: 16px; color: var(--text-dark); }
+        .asset-chart-wrapper {
+            height: 100px;
+            width: 100%;
+            background: #fff;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        .hold-item { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            padding: 15px 5px; 
+            border-bottom: 1px solid var(--border-color); 
+            color: var(--text-dark); 
+            flex-wrap: wrap;
+        }
+        .hold-left { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .hold-tpsl {
+            width: 100%;
+            margin-top: 6px;
+            font-size: 11px;
+            color: var(--text-mute);
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .hold-tpsl span {
+            background: rgba(0,0,0,0.03);
+            padding: 2px 8px;
+            border-radius: 12px;
+        }
+        .slider-percent { font-weight: 600; }
+        .slider-leverage { font-weight: 600; color: #3b82f6; }
+        .batch-tpsl .batch-sliders { margin-bottom: 15px; }
+        .batch-tpsl .slider-row { margin-bottom: 15px; }
+        .batch-tpsl .slider-row .label-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        .batch-tpsl input[type=range] { accent-color: var(--down-color); }
+        .batch-tpsl .sl-slider { accent-color: var(--up-color); }
+        .insurance-card {
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 16px;
+            margin: 10px 5px;
+        }
+        .insurance-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+        }
+        .warning {
+            color: #ffa502;
+            font-size: 11px;
+        }
+        .setting-card {
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            border: 1.5px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 24px 20px;
+            margin: 10px 5px;
+        }
+        .setting-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 24px;
+            color: var(--text-dark);
+            text-align: center;
+        }
+        .setting-btn-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        .setting-btn {
+            width: 100%;
+            padding: 16px 10px;
+            border: none;
+            border-radius: 16px;
+            color: white;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            transition: transform 0.1s ease;
+        }
+        .setting-btn:active { transform: scale(0.98); }
+        .btn-save { background: var(--down-color); }
+        .btn-load { background: #3b82f6; }
+        .btn-reset { background: var(--up-color); grid-column: 1 / -1; }
+        .setting-tip {
+            margin-top: 20px;
+            font-size: 12px;
+            color: var(--text-mute);
+            line-height: 1.6;
+        }
+        /* 全局一键平仓按钮 原有样式完全保留 */
+        .hold-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 5px 0 5px;
+            margin-bottom: 8px;
+        }
+        .hold-header .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin: 0;
+        }
+        .btn-flat-close-all {
+            padding: 6px 16px;
+            border: 1px solid var(--up-color);
+            border-radius: 8px;
+            background: transparent;
+            color: var(--up-color);
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .btn-flat-close-all:active {
+            background: var(--up-color);
+            color: white;
+            transform: scale(0.98);
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+    <main class="view-container">
+        <!-- 交易所页面 -->
+        <section id="view-market" class="view-section active">
+            <div class="main-glass-card">
+                <div class="total-section">
+                    <div class="total-label">总资产</div>
+                    <div class="total-amount" id="total-assets">$100000.000</div>
+                </div>
+                <div class="available-section">
+                    <span>可用余额</span>
+                    <span class="available-value" id="available-cash">$100000.000</span>
+                </div>
+            </div>
+            <div class="event-area">
+                <div class="event-list" id="event-list">
+                    <span style="color:var(--text-mute);">暂无事件</span>
+                </div>
+                <hr class="event-divider">
+            </div>
+            <div id="market-list" class="market-list-container"></div>
+        </section>
+        <!-- 挖矿页面 -->
+        <section id="view-mining" class="view-section">
+            <div class="main-glass-card">
+                <div class="total-section">
+                    <div class="total-label">矿场总览</div>
+                </div>
+                <div class="mining-overview">
+                    <div class="mining-overview-item">
+                        <div class="mining-overview-label">矿币 (BTC)</div>
+                        <div class="mining-overview-value" id="mining-btc">0.000</div>
+                    </div>
+                    <div class="mining-overview-item">
+                        <div class="mining-overview-label">总算力</div>
+                        <div class="mining-overview-value" id="mining-hashrate">0 H/s</div>
+                    </div>
+                </div>
+            </div>
+            <div id="mining-devices"></div>
+        </section>
+        <!-- 出海页面 - 重构为层级展开结构 -->
+<section id="view-oversea" class="view-section">
+    <!-- 出海总览大卡片 - 保留原有转账/转入功能 -->
+    <div class="oversea-total-card">
+        <div class="oversea-total-title">🚢 出海全球总览</div>
+        <div class="oversea-total-item">
+            <span class="label">全球资产</span>
+            <span class="value" id="oversea-world-asset">$0.000</span>
+        </div>
+        <div class="oversea-total-item">
+            <span class="label">全球总投资</span>
+            <span class="value" id="oversea-global-invest">$0.000</span>
+        </div>
+        <div class="oversea-total-item">
+            <span class="label">30秒分红</span>
+            <span class="value" id="oversea-recent-dividend">0.000</span>
+        </div>
+
+        <!-- 转账到银行：保留滑动条 -->
+        <div style="margin-top: 15px;">
+            <div style="display: flex; justify-content: space-between; font-size: 12px; color: var(--oversea-text-mute);">
+                <span>转账比例</span>
+                <b id="oversea-transfer-out-percent">100%</b>
+            </div>
+            <input type="range" min="1" max="100" value="100" class="oversea-transfer-slider" id="oversea-transfer-out-slider" style="width: 100%; accent-color: #3b82f6; margin: 8px 0;">
+            <div style="display: flex; justify-content: space-between; font-size: 13px;">
+                <span>转账金额</span>
+                <b id="oversea-transfer-out-amount" class="value">$0.000</b>
+            </div>
+        </div>
+        <button class="oversea-transfer-btn" onclick="overseaTransferToBank()">转账到银行余额</button>
+        <div class="oversea-fee-tip">转账收取25%手续费，实际到账75%</div>
+
+        <!-- 从余额转入：保留滑动条 -->
+        <div style="margin-top: 10px;">
+            <div style="display: flex; justify-content: space-between; font-size: 12px; color: var(--oversea-text-mute);">
+                <span>转入比例</span>
+                <b id="oversea-transfer-in-percent">100%</b>
+            </div>
+            <input type="range" min="1" max="100" value="100" class="oversea-transfer-slider" id="oversea-transfer-in-slider" style="width: 100%; accent-color: #2ed573; margin: 8px 0;">
+            <div style="display: flex; justify-content: space-between; font-size: 13px;">
+                <span>转入金额</span>
+                <b id="oversea-transfer-in-amount" class="value">$0.000</b>
+            </div>
+        </div>
+        <button class="oversea-transfer-in-btn" onclick="overseaTransferFromBalance()">从可用余额转入全球资产</button>
+        <div class="oversea-transfer-in-tip">转入不收手续费，实时到账</div>
+    </div>
+
+    <!-- 新增：国家功能区（层级展开） -->
+    <div class="glass-card" style="margin: 10px 5px;">
+        <!-- 国家功能区标题（可点击展开/收起） -->
+        <div class="oversea-function-title" onclick="toggleCountryFunction()">
+            <span style="font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+                🌍 国家
+                <i id="country-arrow" style="margin-left: auto; transition: transform 0.3s ease;">🚢</i>
+            </span>
+        </div>
+        <!-- 国家列表（默认收起） -->
+        <div id="country-list" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease;">
+            <!-- 小国入口（可点击展开操作界面） -->
+            
+<div class="oversea-country-entry" onclick="toggleCountryDetail('small', event)">
+                <div style="display: flex; align-items: center; gap: 8px; padding: 12px 0; border-bottom: 1px solid var(--border-color);">
+                    <span>🌍 小国</span>
+                    <span style="margin-left: auto; color: var(--text-mute); font-size: 12px;">买卖手续费5%</span>
+                    <i id="small-arrow" style="transition: transform 0.3s ease;">►</i>
+                </div>
+                <!-- 小国操作界面（默认收起） -->
+                <div id="small-detail" class="country-detail" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease; padding: 0 8px;">
+                    <div class="oversea-country-card small" style="margin: 10px 0; border-left: 4px solid var(--small-country-border);">
+                        <div class="oversea-price-row">
+                            <span>ETH当前币价</span>
+                            <span class="value" id="oversea-small-eth-price">$50.000/枚</span>
+                        </div>
+                        <div class="oversea-price-row">
+                            <span>已投资金额</span>
+                            <span class="value" id="oversea-small-invest">$0.000</span>
+                        </div>
+                        
+                        <!-- 投资区：滑动条 -->
+                        <div class="oversea-invest-section">
+                            <div class="oversea-invest-title">投资小国 · 享ETH分红</div>
+                            <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 8px;">
+                                <span>投资比例</span>
+                                <b id="oversea-small-invest-percent">100%</b>
+                            </div>
+                            <input type="range" min="1" max="100" value="100" class="oversea-invest-slider" id="oversea-small-invest-slider" style="width: 100%; accent-color: #2ed573; margin-bottom: 8px;">
+                            <div style="display: flex; justify-content: space-between; font-size: 13px;">
+                                <span>投资金额</span>
+                                <b id="oversea-small-invest-amount" class="value">$0.000</b>
+                            </div>
+                            <div class="oversea-invest-row">
+                                <button class="oversea-invest-btn" onclick="overseaInvest('small')">投资</button>
+                                <button class="oversea-withdraw-invest-btn" onclick="overseaWithdrawInvest('small')">撤资</button>
+                            </div>
+                            <div class="oversea-reward-tip">每投资100万现金 → 30s/分红0.01 ETH</div>
+                        </div>
+
+                        <!-- 买卖区 -->
+                        <div class="oversea-trade-title">ETH 买卖</div>
+                        <input type="range" min="0" max="10000" value="0" class="oversea-trade-slider" id="oversea-small-slider" oninput="overseaUpdateSlider('small')">
+                        <div class="oversea-slider-value" id="oversea-small-slider-value">买卖数量：0 ETH</div>
+                        <div class="oversea-trade-btn-group">
+                            <button class="oversea-trade-btn oversea-buy-btn" onclick="overseaTrade('small', 'buy')">买入ETH</button>
+                            <button class="oversea-trade-btn oversea-sell-btn" onclick="overseaTrade('small', 'sell')">卖出ETH</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 发展国家入口：添加 event 参数 -->
+<div class="oversea-country-entry" onclick="toggleCountryDetail('mid', event)">
+                <div style="display: flex; align-items: center; gap: 8px; padding: 12px 0; border-bottom: 1px solid var(--border-color);">
+                    <span>🌏 发展国家</span>
+                    <span style="margin-left: auto; color: var(--text-mute); font-size: 12px;">买卖手续费10%</span>
+                    <i id="mid-arrow" style="transition: transform 0.3s ease;">►</i>
+                </div>
+                <!-- 发展国家操作界面 -->
+                <div id="mid-detail" class="country-detail" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease; padding: 0 8px;">
+                    <div class="oversea-country-card mid" style="margin: 10px 0; border-left: 4px solid var(--mid-country-border);">
+                        <div class="oversea-price-row">
+                            <span>BNB当前币价</span>
+                            <span class="value" id="oversea-mid-bnb-price">$100.000/枚</span>
+                        </div>
+                        <div class="oversea-price-row">
+                            <span>已投资金额</span>
+                            <span class="value" id="oversea-mid-invest">$0.000</span>
+                        </div>
+                        
+                        <!-- 投资区：滑动条 -->
+                        <div class="oversea-invest-section">
+                            <div class="oversea-invest-title">投资发展国家 · 享BNB分红</div>
+                            <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 8px;">
+                                <span>投资比例</span>
+                                <b id="oversea-mid-invest-percent">100%</b>
+                            </div>
+                            <input type="range" min="1" max="100" value="100" class="oversea-invest-slider" id="oversea-mid-invest-slider" style="width: 100%; accent-color: #2ed573; margin-bottom: 8px;">
+                            <div style="display: flex; justify-content: space-between; font-size: 13px;">
+                                <span>投资金额</span>
+                                <b id="oversea-mid-invest-amount" class="value">$0.000</b>
+                            </div>
+                            <div class="oversea-invest-row">
+                                <button class="oversea-invest-btn" onclick="overseaInvest('mid')">投资</button>
+                                <button class="oversea-withdraw-invest-btn" onclick="overseaWithdrawInvest('mid')">撤资</button>
+                            </div>
+                            <div class="oversea-reward-tip">每投资100万现金 → 30s/分红0.05 BNB</div>
+                        </div>
+
+                        <!-- 买卖区 -->
+                        <div class="oversea-trade-title">BNB 买卖</div>
+                        <input type="range" min="0" max="1000" value="0" class="oversea-trade-slider" id="oversea-mid-slider" oninput="overseaUpdateSlider('mid')">
+                        <div class="oversea-slider-value" id="oversea-mid-slider-value">买卖数量：0 BNB</div>
+                        <div class="oversea-trade-btn-group">
+                            <button class="oversea-trade-btn oversea-buy-btn" onclick="overseaTrade('mid', 'buy')">买入BNB</button>
+                            <button class="oversea-trade-btn oversea-sell-btn" onclick="overseaTrade('mid', 'sell')">卖出BNB</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 先进国家入口 -->
+<div class="oversea-country-entry" onclick="toggleCountryDetail('high', event)">
+
+                <div style="display: flex; align-items: center; gap: 8px; padding: 12px 0;">
+                    <span>🌎 先进国家</span>
+                    <span style="margin-left: auto; color: var(--text-mute); font-size: 12px;">买卖手续费15%</span>
+                    <i id="high-arrow" style="transition: transform 0.3s ease;">►</i>
+                </div>
+                <!-- 先进国家操作界面 -->
+                <div id="high-detail" class="country-detail" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease; padding: 0 8px;">
+                    <div class="oversea-country-card high" style="margin: 10px 0; border-left: 4px solid var(--high-country-border);">
+                        <div class="oversea-price-row">
+                            <span>BTC当前币价</span>
+                            <span class="value" id="oversea-high-btc-price">$500000.000/枚</span>
+                        </div>
+                        <div class="oversea-price-row">
+                            <span>已投资金额</span>
+                            <span class="value" id="oversea-high-invest">$0.000</span>
+                        </div>
+                        
+                        <!-- 投资区：滑动条 -->
+                        <div class="oversea-invest-section">
+                            <div class="oversea-invest-title">投资先进国家 · 享BTC分红</div>
+                            <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 8px;">
+                                <span>投资比例</span>
+                                <b id="oversea-high-invest-percent">100%</b>
+                            </div>
+                            <input type="range" min="1" max="100" value="100" class="oversea-invest-slider" id="oversea-high-invest-slider" style="width: 100%; accent-color: #2ed573; margin-bottom: 8px;">
+                            <div style="display: flex; justify-content: space-between; font-size: 13px;">
+                                <span>投资金额</span>
+                                <b id="oversea-high-invest-amount" class="value">$0.000</b>
+                            </div>
+                            <div class="oversea-invest-row">
+                                <button class="oversea-invest-btn" onclick="overseaInvest('high')">投资</button>
+                                <button class="oversea-withdraw-invest-btn" onclick="overseaWithdrawInvest('high')">撤资</button>
+                            </div>
+                            <div class="oversea-reward-tip">每投资100万现金 → 30s/分红0.1 BTC</div>
+                        </div>
+
+                        <!-- 买卖区 -->
+                        <div class="oversea-trade-title">BTC 买卖</div>
+                        <input type="range" min="0" max="100" value="0" class="oversea-trade-slider" id="oversea-high-slider" oninput="overseaUpdateSlider('high')">
+                        <div class="oversea-slider-value" id="oversea-high-slider-value">买卖数量：0 BTC</div>
+                        <div class="oversea-trade-btn-group">
+                            <button class="oversea-trade-btn oversea-buy-btn" onclick="overseaTrade('high', 'buy')">买入BTC</button>
+                            <button class="oversea-trade-btn oversea-sell-btn" onclick="overseaTrade('high', 'sell')">卖出BTC</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+        <!-- 资产页面 -->
+        <section id="view-assets" class="view-section">
+            <h2 class="section-title" style="padding: 20px 5px 0 5px; font-size: 18px; font-weight: 700;">资产概览</h2>
+            <div class="asset-box">
+                <div class="asset-grid">
+                    <div class="asset-item">
+                        <small>持仓市值</small><br>
+                        <b id="hold-market-value">$0.000</b>
+                    </div>
+                    <div class="asset-item">
+                        <small>累计盈亏</small><br>
+                        <b id="total-profit-loss">$0.000</b>
+                    </div>
+                </div>
+                <div class="asset-chart-wrapper">
+                    <canvas id="asset-chart"></canvas>
+                </div>
+            </div>
+            <div class="glass-card batch-tpsl">
+                <h4 style="margin-bottom: 10px;">⚡ 自动止盈止损 (开仓预设)</h4>
+                <div class="batch-sliders">
+                    <div class="slider-row">
+                        <div class="label-row">
+                            <label>默认止盈 %</label>
+                            <span id="default-tp">20%</span>
+                        </div>
+                        <input type="range" class="tp-slider" min="0" max="200" step="0.1" value="20" id="tp-slider">
+                    </div>
+                    <div class="slider-row">
+                        <div class="label-row">
+                            <label>默认止损 %</label>
+                            <span id="default-sl">10%</span>
+                        </div>
+                        <input type="range" class="sl-slider" min="0" max="200" step="0.1" value="10" id="sl-slider">
+                    </div>
+                </div>
+                <p style="font-size:11px; color:var(--text-mute); margin-top:6px;">
+                    多仓：止盈=开仓价×(1+止盈%/杠杆)，止损=开仓价×(1-止损%/杠杆)；空仓相反。<br>
+                    滑块为0%表示不设置自动止盈止损。
+                </p>
+            </div>
+            <!-- 银行+设置按钮 -->
+            <div class="function-row">
+                <div class="function-card" data-tab="bank">
+                    <div class="emoji">🏦</div>
+                    <div class="name">银行</div>
+                </div>
+                <div class="function-card" data-tab="setting">
+                    <div class="emoji">⚙️</div>
+                    <div class="name">设置</div>
+                </div>
+            </div>
+            <!-- 我的持仓标题+右侧全局一键平仓按钮 -->
+            <div class="hold-header">
+                <h2 class="section-title">我的持仓</h2>
+                <button class="btn-flat-close-all" id="btn-close-all-leverage">一键平仓</button>
+            </div>
+            <div id="portfolio-list"></div>
+        </section>
+        <!-- 银行页面 -->
+        <section id="view-bank" class="view-section">
+            <div class="back-button" data-tab="assets">返回个人中心</div>
+            <div class="glass-card">
+                <div class="bank-item">
+                    <div class="bank-row">
+                        <span class="label">存款总额</span>
+                        <span class="value" id="bank-deposit">$0.000</span>
+                    </div>
+                    <div class="rate-row"><span class="rate-label">存款利率</span><span class="rate-percent">3%</span></div>
+                </div>
+                <div class="bank-item">
+                    <div class="bank-row">
+                        <span class="label">贷款总额</span>
+                        <span class="value" id="loan-amount">$0.000</span>
+                    </div>
+                    <div class="rate-row"><span class="rate-label">贷款利率</span><span class="loan-percent">12%</span></div>
+                </div>
+                <div class="bank-item">
+                    <div class="bank-row">
+                        <span class="label">可用额度</span>
+                        <span class="value" id="loan-available">$0.000</span>
+                    </div>
+                </div>
+                <div class="bank-item">
+                    <div class="bank-row">
+                        <span class="label">资金率</span>
+                        <b class="value" id="bank-slider-percent">100%</b>
+                    </div>
+                </div>
+                <input type="range" min="1" max="100" value="100" id="bank-slider">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px;">
+                    <button class="btn btn-deposit" id="btn-deposit">存款</button>
+                    <button class="btn btn-withdraw" id="btn-withdraw">取款</button>
+                    <button class="btn btn-deposit" id="btn-take-loan">贷款</button>
+                    <button class="btn btn-withdraw" id="btn-repay-loan">还款</button>
+                </div>
+            </div>
+            <div class="insurance-card">
+                <h3 style="margin-bottom: 8px;">🛡️ 黑天鹅保险</h3>
+                <div class="insurance-row">
+                    <span>保险池规模</span>
+                    <span id="insurance-pool">$0.000</span>
+                </div>
+                <div class="insurance-row">
+                    <span>当前BTC抵押额度</span>
+                    <span id="insurance-capacity">$0.000</span>
+                </div>
+                <div class="insurance-row">
+                    <span>已购保险总额</span>
+                    <span id="insurance-total">$0.000</span>
+                </div>
+                <div style="margin-top: 12px;">
+                    <label>购买保险金额</label>
+                    <input type="number" value="1000" placeholder="输入金额" class="glass-card" style="width:100%; padding:12px; margin-top:8px;" id="insurance-amount">
+                    <button class="btn btn-deposit" style="margin-top:12px; width:100%;" id="btn-buy-insurance">购买保险</button>
+                </div>
+                <p class="warning" style="margin-top:12px;">⚠️ 当BTC单次跌幅>15%时触发赔付，赔付=保费×跌幅倍数。保险池不足时仅赔30%。</p>
+            </div>
+        </section>
+        <!-- 设置页面 -->
+        <section id="view-setting"
+ class="view-section">
+            <div class="back-button" data-tab="assets">返回个人中心</div>
+            <div class="setting-card">
+                <div class="setting-title">数据存档管理</div>
+                <div class="setting-btn-group">
+                    <button class="setting-btn btn-save" id="btn-save-data">📥 手动存档</button>
+                    <button class="setting-btn btn-load" id="btn-load-data">📤 读取存档</button>
+                </div>
+                <div class="setting-btn-group">
+                    <button class="setting-btn btn-reset" id="btn-reset-data">🔄 重置所有数据</button>
+                </div>
+                <p class="setting-tip">
+                    • 手动存档：将当前所有资产、持仓、矿机、银行数据永久保存到本地<br>
+                    • 读取存档：恢复上一次手动存档的数据，覆盖当前状态<br>
+                    • 重置数据：清空所有存档，恢复初始10万本金状态（谨慎操作）<br>
+                    • 游戏会自动实时保存临时数据，刷新页面不会丢失
+                </p>
+            </div>
+        </section>
+    </main>
+    <!-- 底部导航 - 新增出海tab，原有三个保留 -->
+    <nav class="bottom-nav">
+        <div class="nav-item active" data-tab="market">
+            <span class="emoji">📈</span><span>交易所</span>
+        </div>
+        <div class="nav-item" data-tab="mining">
+            <span class="emoji">⛏️</span><span>挖矿</span>
+        </div>
+        <div class="nav-item" data-tab="oversea">
+            <span class="emoji">🚢</span><span>出海</span>
+        </div>
+        <div class="nav-item" data-tab="assets">
+            <span class="emoji">👤</span><span>个人中心</span>
+        </div>
+    </nav>
+    <!-- 出海功能弹窗 - 新增 -->
+    <div class="oversea-modal" id="oversea-modal">
+        <div class="oversea-modal-content">
+            <div class="oversea-modal-title" id="oversea-modal-title">进入确认</div>
+            <div class="oversea-modal-desc" id="oversea-modal-desc">确认进入该国家？</div>
+            <div class="oversea-modal-btn-group">
+                <button class="oversea-modal-btn oversea-modal-confirm" onclick="overseaConfirmEnter()">确认</button>
+                <button class="oversea-modal-btn oversea-modal-cancel" onclick="overseaCloseModal()">取消</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+// 原有工具函数 完全保留
+function generateHistory(basePrice, length = 600, volatility = 0.02) {
+    let history = [];
+    let price = basePrice;
+    for (let i = 0; i < length; i++) {
+        history.push(price);
+        price = price * (1 + (Math.random() - 0.5) * volatility);
+    }
+    return history;
+}
+function formatMoney(value) {
+    return value.toLocaleString(undefined, { minimumFractionDigits: 3, maximumFractionDigits: 3 });
+}
+function formatPercent(value) {
+    return value.toFixed(3);
+}
+// 出海功能全局变量 - 新增滑动条比例存储
+const overseaGlobal = {
+    currentCountry: '', // 当前待进入的国家
+    // 记录已进入的国家（修复逻辑bug：未进入不可操作）
+    enteredCountries: {
+        small: true,  // 移除付费门槛，所有国家默认已进入
+        mid: true,
+        high: true
+    },
+    // 国家配置（更新币种、价格区间）
+    countryConfig: {
+        small: {
+            coin: 'ETH',
+            price: 50,          // 初始价格50
+            minPrice: 1,        // 最低价格1
+            maxPrice: 90,       // 最高价格90
+            enterCost: 0,       // 移除进入费用
+            invest: 0,
+            dividendRate: 0.01, // 每100万投资30s/分红
+            feeRate: 0.05       // 买入手续费5%
+        },
+        mid: {
+            coin: 'BNB',
+            price: 100,         // 初始价格100
+            minPrice: 10,       // 最低价格10
+            maxPrice: 200,      // 最高价格200
+            enterCost: 0,
+            invest: 0,
+            dividendRate: 0.05,
+            feeRate: 0.10       // 买入手续费10%
+        },
+        high: {
+            coin: 'BTC',
+            price: 500000,      // 初始价格500000
+            minPrice: 100000,   // 最低价格100000
+            maxPrice: 1000000,  // 最高价格1000000
+            enterCost: 0,
+            invest: 0,
+            dividendRate: 0.1,
+            feeRate: 0.15       // 买入手续费15%
+        }
+    },
+    worldAsset: 0, // 全球资产
+    globalInvest: 0, // 全球总投资
+    recentDividend: {ETH: 0, BNB: 0, BTC: 0}, // 最近分红记录
+    // 持仓数据（独立于原有portfolio，避免冲突）
+    holdings: {
+        ETH: 0,
+        BNB: 0
+    },
+    // 新增：滑动条比例存储（默认100%）
+    sliderPercent: {
+        transferOut: 100,  // 转账到银行比例
+        transferIn: 100,   // 从余额转入比例
+        smallInvest: 100,  // 小国投资比例
+        midInvest: 100,    // 发展国家投资比例
+        highInvest: 100    // 先进国家投资比例
+    }
+};
+// 新增：撤资功能
+function overseaWithdrawInvest(countryType) {
+    const config = overseaGlobal.countryConfig[countryType];
+    if (config.invest <= 0) {
+        alert(`该国家暂无投资可撤回`);
+        return;
+    }
+    
+    const withdrawAmount = config.invest;
+    config.invest = 0;
+    overseaGlobal.globalInvest -= withdrawAmount;
+    overseaGlobal.worldAsset += withdrawAmount;
+    
+    alert(`成功撤回$${formatMoney(withdrawAmount)}到全球资产`);
+    renderAll();
+    overseaRenderUI();
+}
+// 新增：滑动条更新通用函数（转账+投资）
+function overseaUpdateAllSliders() {
+    // 1. 转账到银行滑动条更新
+    const transferOutPercent = overseaGlobal.sliderPercent.transferOut;
+    document.getElementById('oversea-transfer-out-percent').textContent = `${transferOutPercent}%`;
+    const transferOutAmount = overseaGlobal.worldAsset * (transferOutPercent / 100);
+    document.getElementById('oversea-transfer-out-amount').textContent = `$${formatMoney(transferOutAmount)}`;
+
+    // 2. 从余额转入滑动条更新
+    const transferInPercent = overseaGlobal.sliderPercent.transferIn;
+    document.getElementById('oversea-transfer-in-percent').textContent = `${transferInPercent}%`;
+    const transferInAmount = game.cash * (transferInPercent / 100);
+    document.getElementById('oversea-transfer-in-amount').textContent = `$${formatMoney(transferInAmount)}`;
+
+    // 3. 各国投资滑动条更新
+    const smallInvestPercent = overseaGlobal.sliderPercent.smallInvest;
+    document.getElementById('oversea-small-invest-percent').textContent = `${smallInvestPercent}%`;
+    const smallInvestAmount = game.cash * (smallInvestPercent / 100);
+    document.getElementById('oversea-small-invest-amount').textContent = `$${formatMoney(smallInvestAmount)}`;
+
+    const midInvestPercent = overseaGlobal.sliderPercent.midInvest;
+    document.getElementById('oversea-mid-invest-percent').textContent = `${midInvestPercent}%`;
+    const midInvestAmount = game.cash * (midInvestPercent / 100);
+    document.getElementById('oversea-mid-invest-amount').textContent = `$${formatMoney(midInvestAmount)}`;
+
+    const highInvestPercent = overseaGlobal.sliderPercent.highInvest;
+    document.getElementById('oversea-high-invest-percent').textContent = `${highInvestPercent}%`;
+    const highInvestAmount = game.cash * (highInvestPercent / 100);
+    document.getElementById('oversea-high-invest-amount').textContent = `$${formatMoney(highInvestAmount)}`;
+}
+
+// 出海币价波动定时器（每30秒波动一次，不超价格区间）
+setInterval(() => {
+    for (let type in overseaGlobal.countryConfig) {
+        const config = overseaGlobal.countryConfig[type];
+        // 随机波动±5%
+        const volatility = (Math.random() - 0.5) * 0.05;
+        let newPrice = config.price * (1 + volatility);
+        // 限制在价格区间内
+        newPrice = Math.max(config.minPrice, Math.min(config.maxPrice, newPrice));
+        config.price = newPrice;
+    }
+    // 刷新出海UI
+    if (game.activeTab === 'oversea') {
+        overseaRenderUI();
+    }
+}, 30000);
+// 出海功能工具函数 - 新增，修复逻辑bug
+function overseaOpenModal(countryType) {
+    overseaGlobal.currentCountry = countryType;
+    const config = overseaGlobal.countryConfig[countryType];
+    let countryName = '';
+    if (countryType === 'small') countryName = '小国';
+    else if (countryType === 'mid') countryName = '发展国家';
+    else countryName = '先进国家';
+    document.getElementById('oversea-modal-title').textContent = `进入${countryName}`;
+    document.getElementById('oversea-modal-desc').textContent = `确认进入${countryName}？将扣除${formatMoney(config.enterCost)}现金出海费`;
+    document.getElementById('oversea-modal').style.display = 'flex';
+}
+function overseaCloseModal() {
+    document.getElementById('oversea-modal').style.display = 'none';
+    overseaGlobal.currentCountry = '';
+}
+function overseaConfirmEnter() {
+    const countryType = overseaGlobal.currentCountry;
+    if (!countryType) return;
+    const config = overseaGlobal.countryConfig[countryType];
+    if (game.cash < config.enterCost) {
+        alert(`现金不足！进入需要${formatMoney(config.enterCost)}现金`);
+        overseaCloseModal();
+        return;
+    }
+    // 扣除出海费（从原有现金中扣除）
+    game.cash -= config.enterCost;
+    // 标记为已进入（修复逻辑bug的核心）
+    overseaGlobal.enteredCountries[countryType] = true;
+    alert(`成功进入${countryType === 'small' ? '小国' : countryType === 'mid' ? '发展国家' : '先进国家'}，可进行买卖和投资操作`);
+    overseaCloseModal();
+    // 刷新原有UI和出海UI
+    renderAll();
+    overseaRenderUI();
+}
+// 修改：从余额转入（适配滑动条）
+function overseaTransferFromBalance() {
+    const cash = game.cash;
+    if (cash <= 0) {
+        alert('可用余额为空，无法转入');
+        return;
+    }
+    // 取滑动条比例计算金额
+    const percent = overseaGlobal.sliderPercent.transferIn / 100;
+    const transferAmount = cash * percent;
+    if (transferAmount <= 0) {
+        alert('请选择大于0的转入金额');
+        return;
+    }
+    // 执行转入
+    game.cash -= transferAmount;
+    overseaGlobal.worldAsset += transferAmount;
+    alert(`转入成功！$${formatMoney(transferAmount)}已从可用余额转入全球资产`);
+    // 重置滑动条为100%并刷新
+    overseaGlobal.sliderPercent.transferIn = 100;
+    document.getElementById('oversea-transfer-in-slider').value = 100;
+    renderAll();
+    overseaRenderUI();
+}
+
+function overseaUpdateSlider(countryType) {
+    const slider = document.getElementById(`oversea-${countryType}-slider`);
+    const valueEl = document.getElementById(`oversea-${countryType}-slider-value`);
+    const value = parseInt(slider.value);
+    const coin = overseaGlobal.countryConfig[countryType].coin;
+    valueEl.textContent = `买卖数量：${value} ${coin}`;
+}
+// 修改：各国投资（适配滑动条，删除原输入框逻辑）
+function overseaInvest(countryType) {
+    // 检测是否已进入国家
+    if (!overseaGlobal.enteredCountries[countryType]) {
+        alert(`请先进入${countryType === 'small' ? '小国' : countryType === 'mid' ? '发展国家' : '先进国家'}再进行投资`);
+        return;
+    }
+    const cash = game.cash;
+    if (cash <= 0) {
+        alert('现金不足，无法投资');
+        return;
+    }
+    // 取对应国家投资滑动条比例
+    const percent = overseaGlobal.sliderPercent[`${countryType}Invest`] / 100;
+    const investAmount = cash * percent;
+    if (investAmount <= 0) {
+        alert('请选择大于0的投资金额');
+        return;
+    }
+    const config = overseaGlobal.countryConfig[countryType];
+    // 执行投资
+    game.cash -= investAmount;
+    config.invest += investAmount;
+    overseaGlobal.globalInvest += investAmount;
+    const addDividend = (investAmount / 1000000) * config.dividendRate;
+    overseaGlobal.dailyBtcDividend += addDividend;
+    // 重置滑动条为100%
+    overseaGlobal.sliderPercent[`${countryType}Invest`] = 100;
+    document.getElementById(`oversea-${countryType}-invest-slider`).value = 100;
+    alert(`投资成功！已投资$${formatMoney(investAmount)}现金，30s/分红增加${addDividend.toFixed(4)}`);
+    renderAll();
+    overseaRenderUI();
+}
+
+// 修复逻辑bug：未进入国家不可买卖
+function overseaTrade(countryType, action) {
+    // 检测是否已进入该国家
+    if (!overseaGlobal.enteredCountries[countryType]) {
+        alert(`请先进入${countryType === 'small' ? '小国' : countryType === 'mid' ? '发展国家' : '先进国家'}再进行买卖操作`);
+        return;
+    }
+    const slider = document.getElementById(`oversea-${countryType}-slider`);
+    const tradeCount = parseInt(slider.value);
+    if (tradeCount <= 0) {
+        alert('请选择买卖数量');
+        return;
+    }
+    const config = overseaGlobal.countryConfig[countryType];
+    const coin = config.coin;
+    const coinPrice = config.price;
+    if (action === 'buy') {
+        // 买入：扣除现金，增加持仓（交易所持仓）
+        const totalCost = tradeCount * coinPrice;
+        const feeRate = config.feeRate; // 新增：手续费
+        const fee = totalCost * feeRate;
+        const totalWithFee = totalCost + fee;
+        
+        if (game.cash < totalWithFee) {
+            alert('现金不足，无法买入（含手续费）');
+            return;
+        }
+        
+        game.cash -= totalWithFee;
+        
+        // 直接增加交易所持仓
+        if (!game.portfolio[coin]) {
+            game.portfolio[coin] = {qty: 0, avgPrice: coinPrice};
+        } else {
+            // 计算平均价格
+            const oldTotal = game.portfolio[coin].qty * game.portfolio[coin].avgPrice;
+            const newTotal = oldTotal + totalCost;
+            game.portfolio[coin].avgPrice = newTotal / (game.portfolio[coin].qty + tradeCount);
+        }
+        game.portfolio[coin].qty += tradeCount;
+        
+        alert(`成功买入${tradeCount} ${coin}，花费${formatMoney(totalWithFee)}现金（含${(feeRate*100).toFixed(0)}%手续费）`);
+    } else if (action === 'sell') {
+        // 卖出：扣除交易所持仓，增加全球资产
+        if (!game.portfolio[coin] || game.portfolio[coin].qty < tradeCount) {
+            alert(`${coin}交易所持仓不足，无法卖出`);
+            return;
+        }
+        const totalEarn = tradeCount * coinPrice;
+        game.portfolio[coin].qty -= tradeCount;
+        if (game.portfolio[coin].qty < 1e-8) {
+            delete game.portfolio[coin];
+        }
+        overseaGlobal.worldAsset += totalEarn;
+        alert(`成功卖出${tradeCount} ${coin}，收益${formatMoney(totalEarn)}已存入全球资产`);
+    }
+    // 重置滑动条
+    slider.value = 0;
+    document.getElementById(`oversea-${countryType}-slider-value`).textContent = `买卖数量：0 ${coin}`;
+    // 刷新UI
+    renderAll();
+    overseaRenderUI();
+}
+// 修改：转账到银行（适配滑动条）
+function overseaTransferToBank() {
+    const worldAsset = overseaGlobal.worldAsset;
+    if (worldAsset <= 0) {
+        alert('全球资产为空，无法转账');
+        return;
+    }
+    // 取滑动条比例计算金额
+    const percent = overseaGlobal.sliderPercent.transferOut / 100;
+    const transferAmount = worldAsset * percent;
+    if (transferAmount <= 0) {
+        alert('请选择大于0的转账金额');
+        return;
+    }
+    // 计算手续费后金额
+    const actualAmount = transferAmount * 0.75;
+    if (!confirm(`确认转账$${formatMoney(transferAmount)}全球资产到银行？\n扣除25%手续费，实际到账$${formatMoney(actualAmount)}`)) {
+        return;
+    }
+    // 执行转账
+    game.bankDeposit += actualAmount;
+    overseaGlobal.worldAsset -= transferAmount;
+    alert(`转账成功！$${formatMoney(actualAmount)}已存入银行余额`);
+    // 重置滑动条为100%并刷新
+    overseaGlobal.sliderPercent.transferOut = 100;
+    document.getElementById('oversea-transfer-out-slider').value = 100;
+    renderAll();
+    overseaRenderUI();
+}
+
+function overseaRenderUI() {
+    try {
+        // 刷新总览数据
+        document.getElementById('oversea-world-asset').textContent = `$${formatMoney(overseaGlobal.worldAsset)}`;
+        document.getElementById('oversea-global-invest').textContent = `$${formatMoney(overseaGlobal.globalInvest)}`;
+        
+        // 更新分红显示
+        let dividendText = '';
+        if (overseaGlobal.recentDividend.ETH > 0) dividendText += overseaGlobal.recentDividend.ETH.toFixed(4) + ' ETH ';
+        if (overseaGlobal.recentDividend.BNB > 0) dividendText += overseaGlobal.recentDividend.BNB.toFixed(4) + ' BNB ';
+        if (overseaGlobal.recentDividend.BTC > 0) dividendText += overseaGlobal.recentDividend.BTC.toFixed(4) + ' BTC ';
+        document.getElementById('oversea-recent-dividend').textContent = dividendText || '0.000';
+
+        // 刷新各国币价
+        document.getElementById('oversea-small-eth-price').textContent = `$${formatMoney(overseaGlobal.countryConfig.small.price)}/枚`;
+        document.getElementById('oversea-mid-bnb-price').textContent = `$${formatMoney(overseaGlobal.countryConfig.mid.price)}/枚`;
+        document.getElementById('oversea-high-btc-price').textContent = `$${formatMoney(overseaGlobal.countryConfig.high.price)}/枚`;
+
+        // 刷新各国已投资金额
+        document.getElementById('oversea-small-invest').textContent = `$${formatMoney(overseaGlobal.countryConfig.small.invest)}`;
+        document.getElementById('oversea-mid-invest').textContent = `$${formatMoney(overseaGlobal.countryConfig.mid.invest)}`;
+        document.getElementById('oversea-high-invest').textContent = `$${formatMoney(overseaGlobal.countryConfig.high.invest)}`;
+
+        // 刷新所有滑动条金额
+        overseaUpdateAllSliders();
+    } catch (e) {
+        console.error('overseaRenderUI 执行出错:', e);
+        // 即使出海UI渲染失败，也强制刷新主页面总资产，防止其消失
+        renderHeader();
+    }
+}
+
+// 出海分红定时器 - 每30秒发放（30秒一次）
+setInterval(() => {
+    // 重置最近分红记录
+    overseaGlobal.recentDividend = {ETH: 0, BNB: 0, BTC: 0};
+    
+    let hasDividend = false;
+    
+    // 遍历所有国家计算分红
+    for (let type in overseaGlobal.countryConfig) {
+        const config = overseaGlobal.countryConfig[type];
+        if (config.invest <= 0) continue; // 无投资则跳过
+        
+        const dividendAmount = (config.invest / 1000000) * config.dividendRate;
+        if (dividendAmount <= 0) continue; // 分红为0则跳过
+        
+        // 将分红直接加到交易所持仓中
+        const coin = config.coin;
+        if (!game.portfolio[coin]) {
+            game.portfolio[coin] = {qty: 0, avgPrice: config.price};
+        }
+        game.portfolio[coin].qty += dividendAmount;
+        
+        // 记录分红到最近分红记录
+        overseaGlobal.recentDividend[coin] += dividendAmount;
+        hasDividend = true;
+    }
+    
+    // 如果有分红则刷新UI
+    if (hasDividend) {
+        renderAll();
+        overseaRenderUI();
+    }
+}, 30000); // 30秒一次
+
+// 新增：展开/收起国家功能区
+function toggleCountryFunction() {
+    const countryList = document.getElementById('country-list');
+    const arrow = document.getElementById('country-arrow');
+    // 切换展开/收起状态
+    if (countryList.style.maxHeight === '0px' || countryList.style.maxHeight === '') {
+        countryList.style.maxHeight = '2000px'; // 足够容纳所有国家内容
+        arrow.style.transform = 'rotate(180deg)'; // 箭头向下
+    } else {
+        countryList.style.maxHeight = '0px';
+        arrow.style.transform = 'rotate(0deg)'; // 箭头向上
+        // 收起国家功能区时，同时收起所有国家的操作界面
+        document.querySelectorAll('.country-detail').forEach(detail => {
+            detail.style.maxHeight = '0px';
+        });
+        // 重置所有国家入口箭头
+        document.getElementById('small-arrow').style.transform = 'rotate(0deg)';
+        document.getElementById('mid-arrow').style.transform = 'rotate(0deg)';
+        document.getElementById('high-arrow').style.transform = 'rotate(0deg)';
+    }
+}
+
+function toggleCountryDetail(countryType, event) {
+    event.stopPropagation(); // 这行是关键，阻止事件冒泡
+    const detail = document.getElementById(`${countryType}-detail`);
+    const arrow = document.getElementById(`${countryType}-arrow`);
+    if (detail.style.maxHeight === '0px' || detail.style.maxHeight === '') {
+        detail.style.maxHeight = '1500px';
+        arrow.style.transform = 'rotate(90deg)';
+    } else {
+        detail.style.maxHeight = '0px';
+        arrow.style.transform = 'rotate(0deg)';
+    }
+}
+
+
+// 原有Game核心类 100%完全保留，仅修改事件文案为"买入"风格
+class Game {
+    constructor() {
+        this.MANUAL_SAVE_KEY = 'crypto_manual_save';
+        this.AUTO_TEMP_KEY = 'crypto_auto_temp';
+        
+        this.defaultData = {
+            cash: 100000,
+            bankDeposit: 0,
+            loanPrincipal: 0,
+            loanAmount: 0,
+            portfolio: {},
+            leveragePositions: {},
+            activeStockId: null,
+            buyAmount: 1000,
+            sliderValues: {},
+            leverageSliderValues: {},
+            bankSliderPercent: 100,
+            zoomStates: {},
+            defaultTP: 20,
+            defaultSL: 10,
+            marketList: [
+    { id: 'BTC', name: 'Bitcoin', price: 68000, history: generateHistory(68000, 600, 0.02) },
+    { id: 'ETH', name: 'Ethereum', price: 185.2, history: generateHistory(185.2, 600, 0.02) },
+    { id: 'BNB', name: 'Binance Coin', price: 920.5, history: generateHistory(920.5, 600, 0.02) },
+    { id: 'SOL', name: 'Solana', price: 780.3, history: generateHistory(780.3, 600, 0.02) },
+    { id: '天然气999999', name: '99999999', price: 6660000, history: generateHistory(6660000, 600, 0.02) },
+],
+            assetHistory: [],
+            events: {},
+            eventCounter: 0,
+            mining: {
+                devices: {
+                    entry: { name: '入门矿机', unlocked: false, count: 0, hashrate: 10, unlockCost: 50000, upgradeCost: 100000, power: 10, buyCount: 1 },
+                    pro: { name: '专业矿机', unlocked: false, count: 0, hashrate: 30, unlockCost: 200000, upgradeCost: 200000, power: 20, buyCount: 1 },
+                    main: { name: '主力机型', unlocked: false, count: 0, hashrate: 70, unlockCost: 500000, upgradeCost: 500000, power: 30, buyCount: 1 },
+                    asic: { name: '顶级ASIC', unlocked: false, count: 0, hashrate: 100, unlockCost: 1000000, upgradeCost: 1000000, power: 50, buyCount: 1 }
+                },
+                totalHashrate: 0,
+            },
+            insurance: {
+                poolBalance: 500000,
+                platformProfit: 200000,
+                policies: [],
+            },
+            lastBTCPrice: 68000
+        };
+        const tempData = this.loadFromStorage(this.AUTO_TEMP_KEY) || this.defaultData;
+        this.initData(tempData);
+        this.depositRate = 0.00001;
+        this.loanRate = 0.00008;
+        this._lastMiningTime = null;
+        this.activeTab = 'market';
+        this.marketDOMInited = false;
+    }
+    initData(data) {
+        this.cash = data.cash;
+        this.bankDeposit = data.bankDeposit;
+        this.loanPrincipal = data.loanPrincipal;
+        this.loanAmount = data.loanAmount;
+        this.portfolio = data.portfolio;
+        this.leveragePositions = data.leveragePositions;
+        this.activeStockId = data.activeStockId;
+        this.buyAmount = data.buyAmount;
+        this.sliderValues = data.sliderValues;
+        this.leverageSliderValues = data.leverageSliderValues;
+        this.bankSliderPercent = data.bankSliderPercent;
+        this.zoomStates = data.zoomStates;
+        this.defaultTP = data.defaultTP;
+        this.defaultSL = data.defaultSL;
+        this.marketList = data.marketList;
+        this.assetHistory = data.assetHistory;
+        this.events = data.events;
+        this.eventCounter = data.eventCounter;
+        this.mining = data.mining;
+        this.insurance = data.insurance;
+        this.lastBTCPrice = data.lastBTCPrice;
+    }
+    loadFromStorage(key) {
+        try {
+            const data = localStorage.getItem(key);
+            return data ? JSON.parse(data) : null;
+        } catch (e) {
+            console.warn('读取本地数据失败', e);
+            return null;
+        }
+    }
+    saveToStorage(key, data) {
+        try {
+            localStorage.setItem(key, JSON.stringify(data));
+            return true;
+        } catch (e) {
+            console.warn('保存本地数据失败', e);
+            return false;
+        }
+    }
+    getCurrentFullData() {
+        return {
+            cash: this.cash,
+            bankDeposit: this.bankDeposit,
+            loanPrincipal: this.loanPrincipal,
+            loanAmount: this.loanAmount,
+            portfolio: this.portfolio,
+            leveragePositions: this.leveragePositions,
+            activeStockId: this.activeStockId,
+            buyAmount: this.buyAmount,
+            sliderValues: this.sliderValues,
+            leverageSliderValues: this.leverageSliderValues,
+            bankSliderPercent: this.bankSliderPercent,
+            zoomStates: this.zoomStates,
+            defaultTP: this.defaultTP,
+            defaultSL: this.defaultSL,
+            marketList: this.marketList,
+            assetHistory: this.assetHistory,
+            events: this.events,
+            eventCounter: this.eventCounter,
+            mining: this.mining,
+            insurance: this.insurance,
+            lastBTCPrice: this.lastBTCPrice
+        };
+    }
+    manualSave() {
+        const data = this.getCurrentFullData();
+        const success = this.saveToStorage(this.MANUAL_SAVE_KEY, data);
+        alert(success ? '✅ 存档成功！数据已永久保存' : '❌ 存档失败，请重试');
+    }
+    manualLoad() {
+        const saveData = this.loadFromStorage(this.MANUAL_SAVE_KEY);
+        if (!saveData) {
+            alert('❌ 未找到存档数据，请先手动存档');
+            return;
+        }
+        if (!confirm('⚠️ 读取存档将覆盖当前所有数据，是否继续？')) return;
+        
+        this.initData(saveData);
+        this.recalcMiningStats();
+        this.autoSaveTemp();
+        renderAll();
+        drawCharts();
+        alert('✅ 读档成功！已恢复存档数据');
+    }
+    resetAllData() {
+        if (!confirm('⚠️ 确定要重置所有数据吗？所有资产、存档将被清空，恢复初始10万本金！')) return;
+        
+        localStorage.removeItem(this.MANUAL_SAVE_KEY);
+        localStorage.removeItem(this.AUTO_TEMP_KEY);
+        this.initData(this.defaultData);
+        this.init();
+        renderAll();
+        drawCharts();
+        alert('✅ 数据重置成功！已恢复初始状态');
+    }
+    autoSaveTemp() {
+        const data = this.getCurrentFullData();
+        this.saveToStorage(this.AUTO_TEMP_KEY, data);
+    }
+    get totalAssets() {
+        let marketValue = 0;
+        this.marketList.forEach(item => {
+            const hold = this.portfolio[item.id];
+            if (hold && hold.qty > 0) marketValue += hold.qty * item.price;
+        });
+        return this.cash + this.bankDeposit + marketValue;
+    }
+    init() {
+        if (this.assetHistory.length === 0) {
+            for (let i = 0; i < 30; i++) {
+                this.assetHistory.push(this.totalAssets);
+            }
+        }
+        this.recalcMiningStats();
+        this.lastBTCPrice = this.marketList.find(c => c.id === 'BTC')?.price || 68000;
+        this._lastMiningTime = Date.now();
+        this.autoSaveTemp();
+    }
+    trade(stockId, action) {
+        const stock = this.marketList.find(x => x.id === stockId);
+        if (!stock) return;
+        const sliderVal = this.sliderValues[stockId] || 100;
+        const ratio = sliderVal / 100;
+        const leverage = this.leverageSliderValues[stockId] || 10;
+        if (action === 'BUY') {
+            const canBuy = Math.floor((this.cash * ratio) / stock.price);
+            if (canBuy <= 0) {
+                alert('资金不足，无法买入');
+                return;
+            }
+            const old = this.portfolio[stockId];
+            if (!old || old.qty === 0) {
+                this.portfolio[stockId] = { qty: canBuy, avgPrice: stock.price };
+            } else {
+                const totalQty = old.qty + canBuy;
+                const newAvg = (old.qty * old.avgPrice + canBuy * stock.price) / totalQty;
+                this.portfolio[stockId] = { qty: totalQty, avgPrice: newAvg };
+            }
+            this.cash -= canBuy * stock.price;
+        }
+        else if (action === 'SELL') {
+            const old = this.portfolio[stockId];
+            if (!old || old.qty <= 0) {
+                alert('没有可卖出的持仓');
+                return;
+            }
+            const sellQty = old.qty * ratio;
+            if (sellQty <= 0) return;
+            const newQty = old.qty - sellQty;
+            if (newQty < 1e-12) {
+                delete this.portfolio[stockId];
+            } else {
+                this.portfolio[stockId].qty = newQty;
+            }
+            this.cash += sellQty * stock.price;
+        }
+        else if (action === 'LONG') {
+            const margin = this.cash * ratio;
+            if (margin < 1) {
+                alert('保证金最少1美元');
+                return;
+            }
+            const positionValue = margin * leverage;
+            const qty = positionValue / stock.price;
+            this.cash -= margin;
+            const tpPercent = this.defaultTP;
+            const slPercent = this.defaultSL;
+            let takeProfit = undefined, stopLoss = undefined;
+            if (tpPercent > 0) takeProfit = stock.price * (1 + tpPercent / 100 / leverage);
+            if (slPercent > 0) stopLoss = stock.price * (1 - slPercent / 100 / leverage);
+            if (!this.leveragePositions[stockId]) this.leveragePositions[stockId] = [];
+            this.leveragePositions[stockId].push({
+                direction: 'long',
+                qty: qty,
+                entryPrice: stock.price,
+                leverage: leverage,
+                margin: margin,
+                takeProfit: takeProfit,
+                stopLoss: stopLoss
+            });
+        }
+        else if (action === 'SHORT') {
+            const margin = this.cash * ratio;
+            if (margin < 1) {
+                alert('保证金最少1美元');
+                return;
+            }
+            const positionValue = margin * leverage;
+            const qty = positionValue / stock.price;
+            this.cash -= margin;
+            const tpPercent = this.defaultTP;
+            const slPercent = this.defaultSL;
+            let takeProfit = undefined, stopLoss = undefined;
+            if (tpPercent > 0) takeProfit = stock.price * (1 - tpPercent / 100 / leverage);
+            if (slPercent > 0) stopLoss = stock.price * (1 + slPercent / 100 / leverage);
+            if (!this.leveragePositions[stockId]) this.leveragePositions[stockId] = [];
+            this.leveragePositions[stockId].push({
+                direction: 'short',
+                qty: qty,
+                entryPrice: stock.price,
+                leverage: leverage,
+                margin: margin,
+                takeProfit: takeProfit,
+                stopLoss: stopLoss
+            });
+        }
+        else if (action === 'CLOSE_LEVER') {
+            const positions = this.leveragePositions[stockId];
+            if (!positions || positions.length === 0) {
+                alert('无杠杆持仓可平');
+                return;
+            }
+            const currentPrice = stock.price;
+            let totalReturn = 0, totalPnl = 0;
+            positions.forEach(pos => {
+                let pnl = 0;
+                if (pos.direction === 'long') {
+                    pnl = (currentPrice - pos.entryPrice) * pos.qty;
+                } else {
+                    pnl = (pos.entryPrice - currentPrice) * pos.qty;
+                }
+                totalReturn += pos.margin + pnl;
+                totalPnl += pnl;
+            });
+            this.cash += totalReturn;
+            delete this.leveragePositions[stockId];
+        }
+        renderAll();
+        drawCharts();
+        this.autoSaveTemp();
+    }
+    closeAllLeveragePositions() {
+        const hasLeverage = Object.keys(this.leveragePositions).length > 0;
+        if (!hasLeverage) {
+            alert('暂无杠杆持仓，无需平仓');
+            return;
+        }
+        if (!confirm('⚠️ 确定要一键平掉所有杠杆仓位吗？此操作不可撤销')) return;
+        let totalPositionCount = 0;
+        let totalReturn = 0;
+        let totalPnl = 0;
+        for (let stockId in this.leveragePositions) {
+            const positions = this.leveragePositions[stockId];
+            const coin = this.marketList.find(c => c.id === stockId);
+            if (!coin || positions.length === 0) continue;
+            const currentPrice = coin.price;
+            totalPositionCount += positions.length;
+            positions.forEach(pos => {
+                let pnl = 0;
+                if (pos.direction === 'long') {
+                    pnl = (currentPrice - pos.entryPrice) * pos.qty;
+                } else {
+                    pnl = (pos.entryPrice - currentPrice) * pos.qty;
+                }
+                totalReturn += pos.margin + pnl;
+                totalPnl += pnl;
+            });
+        }
+        this.cash += totalReturn;
+        this.leveragePositions = {};
+        renderAll();
+        drawCharts();
+        this.autoSaveTemp();
+        alert(`✅ 一键平仓成功！\n共平掉 ${totalPositionCount} 个杠杆仓位\n总盈亏：${totalPnl >= 0 ? '+' : ''}$${formatMoney(totalPnl)}\n返还总金额：$${formatMoney(totalReturn)}`);
+    }
+    toggleStockDetail(stockId) {
+        if (this.activeStockId) {
+            const oldItem = document.querySelector(`.stock-item[data-stock-id="${this.activeStockId}"]`);
+            if (oldItem) oldItem.classList.remove('active');
+        }
+        if (this.activeStockId === stockId) {
+            this.activeStockId = null;
+        } else {
+            this.activeStockId = stockId;
+            const newItem = document.querySelector(`.stock-item[data-stock-id="${stockId}"]`);
+            if (newItem) newItem.classList.add('active');
+            requestAnimationFrame(() => {
+                const stock = this.marketList.find(s => s.id === stockId);
+                const canvas = document.getElementById(`chart-${stockId}`);
+                if (stock && canvas) drawStockChart(stock, canvas);
+            });
+        }
+    }
+    toggleZoom(stockId) {
+        this.zoomStates[stockId] = !this.zoomStates[stockId];
+        const zoomBtn = document.querySelector(`.zoom-btn[data-zoom-id="${stockId}"]`);
+        if (zoomBtn) {
+            zoomBtn.className = `zoom-btn ${this.zoomStates[stockId] ? 'active' : ''}`;
+            zoomBtn.textContent = this.zoomStates[stockId] ? '30s' : '10m';
+        }
+        requestAnimationFrame(() => {
+            const stock = this.marketList.find(s => s.id === stockId);
+            const canvas = document.getElementById(`chart-${stockId}`);
+            if (stock && canvas) drawStockChart(stock, canvas);
+        });
+    }
+    closePosition(stockId, index, reason = '手动平仓') {
+        const positions = this.leveragePositions[stockId];
+        if (!positions || index >= positions.length) return;
+        const pos = positions[index];
+        const coin = this.marketList.find(c => c.id === stockId);
+        if (!coin) return;
+        const currentPrice = coin.price;
+        let pnl = 0;
+        if (pos.direction === 'long') {
+            pnl = (currentPrice - pos.entryPrice) * pos.qty;
+        } else {
+            pnl = (pos.entryPrice - currentPrice) * pos.qty;
+        }
+        this.cash += pos.margin + pnl;
+        positions.splice(index, 1);
+        if (positions.length === 0) delete this.leveragePositions[stockId];
+        renderAll();
+        this.autoSaveTemp();
+    }
+    switchTab(tabName) {
+        this.activeTab = tabName;
+        document.querySelectorAll('.view-section').forEach(section => {
+            section.classList.remove('active');
+        });
+        const targetView = document.getElementById(`view-${tabName}`);
+        if (targetView) targetView.classList.add('active');
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.classList.remove('active');
+            if (item.dataset.tab === tabName) item.classList.add('active');
+        });
+        if (tabName === 'market' && !this.marketDOMInited) {
+            renderMarketFull();
+            this.marketDOMInited = true;
+        } else if (tabName === 'oversea') {
+            // 切换到出海页面时刷新出海UI
+            overseaRenderUI();
+        } else {
+            renderAll();
+        }
+        requestAnimationFrame(() => drawCharts());
+    }
+    recalcMiningStats() {
+        let totalHash = 0;
+        for (let key in this.mining.devices) {
+            const dev = this.mining.devices[key];
+            totalHash += dev.count * dev.hashrate;
+        }
+        this.mining.totalHashrate = totalHash;
+    }
+    updateMining(deltaSeconds) {
+        const totalHash = this.mining.totalHashrate;
+        const btcPerSecond = totalHash / 50000;
+        const btcMined = btcPerSecond * deltaSeconds;
+        if (btcMined > 0) {
+            if (!this.portfolio['BTC']) this.portfolio['BTC'] = { qty: 0, avgPrice: 0 };
+            this.portfolio['BTC'].qty += btcMined;
+        }
+    }
+    unlockDevice(key) {
+        const dev = this.mining.devices[key];
+        if (!dev || dev.unlocked) return;
+        if (key === 'pro' && !this.mining.devices.entry.unlocked) return;
+        if (key === 'main' && !this.mining.devices.pro.unlocked) return;
+        if (key === 'asic' && !this.mining.devices.main.unlocked) return;
+        if (this.cash < dev.unlockCost) {
+            alert('资金不足');
+            return;
+        }
+        this.cash -= dev.unlockCost;
+        dev.unlocked = true;
+        dev.count = 1;
+        this.recalcMiningStats();
+        renderMining();
+        this.autoSaveTemp();
+    }
+    expandDevice(key) {
+        const dev = this.mining.devices[key];
+        if (!dev || !dev.unlocked) return;
+        const quantity = parseInt(dev.buyCount) || 1;
+        const totalCost = dev.upgradeCost * quantity;
+        if (this.cash < totalCost) {
+            alert(`资金不足！购买 ${quantity} 台需要 $${totalCost.toLocaleString()}`);
+            return;
+        }
+        this.cash -= totalCost;
+        dev.count += quantity;
+        this.recalcMiningStats();
+        renderMining();
+        this.autoSaveTemp();
+    }
+    depositMoney() {
+        const percent = this.bankSliderPercent / 100;
+        const amount = this.cash * percent;
+        if (amount <= 0) return;
+        this.cash -= amount;
+        this.bankDeposit += amount;
+        renderBank();
+        this.autoSaveTemp();
+    }
+    withdrawMoney() {
+        const percent = this.bankSliderPercent / 100;
+        const amount = this.bankDeposit * percent;
+        if (amount <= 0) return;
+        this.bankDeposit -= amount;
+        this.cash += amount;
+        renderBank();
+        this.autoSaveTemp();
+    }
+    takeLoan() {
+        const available = 100000 + this.totalAssets * 0.5 - this.loanPrincipal;
+        if (available <= 0) return;
+        const percent = this.bankSliderPercent / 100;
+        let loanAmount = available * percent;
+        if (loanAmount > available) loanAmount = available;
+        if (loanAmount <= 0) return;
+        this.cash += loanAmount;
+        this.loanPrincipal += loanAmount;
+        this.loanAmount += loanAmount;
+        renderBank();
+        this.autoSaveTemp();
+    }
+    repayLoan() {
+        if (this.loanAmount <= 0) {
+            alert('没有贷款需要偿还');
+            return;
+        }
+        const percent = this.bankSliderPercent / 100;
+        let repayAmount = this.loanAmount * percent;
+        if (repayAmount > this.cash) repayAmount = this.cash;
+        if (repayAmount > this.loanAmount) repayAmount = this.loanAmount;
+        const ratio = repayAmount / this.loanAmount;
+        this.loanPrincipal *= (1 - ratio);
+        this.loanAmount -= repayAmount;
+        if (this.loanAmount < 0.01) {
+            this.loanAmount = 0;
+            this.loanPrincipal = 0;
+        }
+        this.cash -= repayAmount;
+        renderBank();
+        this.autoSaveTemp();
+    }
+    applyInterest() {
+        this.bankDeposit += this.bankDeposit * this.depositRate;
+        if (this.loanPrincipal > 0) {
+            const interest = this.loanPrincipal * this.loanRate;
+            this.loanAmount += interest;
+        }
+        renderBank();
+        this.autoSaveTemp();
+    }
+    getInsuranceCapacity() {
+        const btcQty = this.portfolio['BTC'] ? this.portfolio['BTC'].qty : 0;
+        return btcQty * 10 * 100000;
+    }
+    buyInsurance(amount) {
+        if (this.cash < amount) { alert('现金不足'); return; }
+        const capacity = this.getInsuranceCapacity();
+        const totalInsured = this.insurance.policies.reduce((sum, p) => sum + p.insuredAmount, 0);
+        if (totalInsured + amount > capacity) {
+            alert('保险额度不足，请先持有更多BTC');
+            return;
+        }
+        this.cash -= amount;
+        this.insurance.poolBalance += amount * 0.5;
+        this.insurance.platformProfit += amount * 0.5;
+        this.insurance.policies.push({
+            id: 'policy_' + Date.now(),
+            premium: amount,
+            buyPrice: this.marketList.find(c => c.id === 'BTC')?.price || 68000,
+            insuredAmount: amount,
+        });
+        renderBank();
+        this.autoSaveTemp();
+    }
+    checkInsurancePayout(changePercent) {
+        if (this.insurance.policies.length === 0) return;
+        const multiplier = Math.abs(changePercent) / 15;
+        this.insurance.policies.forEach(p => {
+            let payout = p.premium * multiplier;
+            const available = this.insurance.poolBalance;
+            if (available >= payout) {
+                this.cash += payout;
+                this.insurance.poolBalance -= payout;
+            } else {
+                const bankruptPayout = payout * 0.3;
+                this.cash += bankruptPayout;
+                this.insurance.poolBalance = Math.max(0, this.insurance.poolBalance - bankruptPayout);
+                this.events['bankrupt_' + Date.now()] = { type: 'bankrupt', endTime: Date.now() + 10000 };
+            }
+        });
+        this.insurance.policies = [];
+        renderBank();
+        this.autoSaveTemp();
+    }
+    checkEvents() {
+    const now = Date.now();
+    // 全局最大同时活跃事件数，避免堆积
+    const maxActiveEvents = 3;
+    const activeEventCount = Object.keys(this.events).length;
+
+    this.marketList.forEach(coin => {
+        const ev = this.events[coin.id];
+        // 1. 跳过未结束的活跃事件
+        if (ev && ev.endTime > now) return;
+        // 2. 增加冷却：事件结束后，强制等待 15 秒再允许触发新事件
+        if (ev && now < ev.endTime + 10000) return;
+        // 3. 全局事件数超限，不再触发新事件
+        if (activeEventCount >= maxActiveEvents) return;
+        // 4. 降低单次触发概率1%
+        if (Math.random() < 0.01) {
+            const type = Math.random() < 0.5 ? 'buy' : 'freeze';
+            const magnitude = 0.1 + Math.random() * 0.1;
+            const direction = type === 'buy' ? 1 : -1;
+            const startPrice = coin.price;
+            const targetPrice = startPrice * (1 + direction * magnitude);
+            this.events[coin.id] = {
+                type: type,
+                startPrice: startPrice,
+                targetPrice: targetPrice,
+                endTime: now + 7000, // 事件持续10秒
+            };
+        }
+    });
+}
+
+    applyEventToPrice(coin) {
+        const ev = this.events[coin.id];
+        if (!ev) return coin.price; // 无事件则返回当前价格
+        const now = Date.now();
+        // 事件结束：移除事件，返回当前价格
+        if (now >= ev.endTime) {
+            delete this.events[coin.id];
+            return coin.price;
+        }
+        // 事件进行中：按时间进度计算当前价格（平滑波动）
+        const totalDuration = 10000; // 事件总时长10秒
+        const startTime = ev.endTime - totalDuration;
+        const elapsed = now - startTime;
+        const progress = Math.min(1, Math.max(0, elapsed / totalDuration)); // 进度0-1
+        // 线性过渡到目标价格
+        return ev.startPrice + (ev.targetPrice - ev.startPrice) * progress;
+    }
+    checkLiquidation() {
+        let hasLiquidation = false;
+        // 遍历所有杠杆仓位，检测是否触发强制平仓
+        for (let id in this.leveragePositions) {
+            const positions = this.leveragePositions[id];
+            const coin = this.marketList.find(c => c.id === id);
+            if (!coin) continue;
+            const currentPrice = coin.price;
+            for (let i = positions.length - 1; i >= 0; i--) {
+                const pos = positions[i];
+                let pnl = 0;
+                // 计算盈亏：多仓=现价-开仓价，空仓=开仓价-现价
+                if (pos.direction === 'long') {
+                    pnl = (currentPrice - pos.entryPrice) * pos.qty;
+                } else {
+                    pnl = (pos.entryPrice - currentPrice) * pos.qty;
+                }
+                // 亏损≥保证金：强制平仓，触发平仓事件
+                if (pnl <= -pos.margin) {
+                    positions.splice(i, 1);
+                    hasLiquidation = true;
+                }
+            }
+            if (positions.length === 0) delete this.leveragePositions[id];
+        }
+        // 触发平仓事件，添加到事件池
+        if (hasLiquidation) {
+            const eventId = 'liquidation_' + (this.eventCounter++);
+            this.events[eventId] = { type: 'liquidation', endTime: Date.now() + 10000 };
+        }
+    }
+    checkTPSL() {
+        for (let id in this.leveragePositions) {
+            const coin = this.marketList.find(c => c.id === id);
+            if (!coin) continue;
+            const currentPrice = coin.price;
+            const positions = this.leveragePositions[id];
+            for (let i = positions.length - 1; i >= 0; i--) {
+                const pos = positions[i];
+                if (pos.takeProfit !== undefined) {
+                    if ((pos.direction === 'long' && currentPrice >= pos.takeProfit) ||
+                        (pos.direction === 'short' && currentPrice <= pos.takeProfit)) {
+                        this.closePosition(id, i, '自动止盈');
+                        continue;
+                    }
+                }
+                if (pos.stopLoss !== undefined) {
+                    if ((pos.direction === 'long' && currentPrice <= pos.stopLoss) ||
+                        (pos.direction === 'short' && currentPrice >= pos.stopLoss)) {
+                        this.closePosition(id, i, '自动止损');
+                    }
+                }
+            }
+        }
+    }
+    priceUpdater() {
+        const now = Date.now();
+        if (!this._lastMiningTime) this._lastMiningTime = now;
+        const delta = (now - this._lastMiningTime) / 1000;
+        if (delta > 0.1) this.updateMining(delta);
+        this._lastMiningTime = now;
+        const btc = this.marketList.find(c => c.id === 'BTC');
+        if (btc) {
+            const oldPrice = this.lastBTCPrice;
+            const change = (btc.price - oldPrice) / oldPrice * 100;
+            if (change <= -15) this.checkInsurancePayout(change);
+            this.lastBTCPrice = btc.price;
+        }
+        this.marketList.forEach(item => {
+            const eventPrice = this.applyEventToPrice(item);
+            if (eventPrice !== item.price) {
+                item.price = eventPrice;
+            } else {
+                const newPrice = item.price * (1 + (Math.random() - 0.5) * 0.01);
+                item.price = newPrice;
+            }
+            item.history.push(item.price);
+            if (item.history.length > 600) item.history.shift();
+        });
+        this.checkLiquidation();
+        this.checkTPSL();
+        this.assetHistory.push(this.totalAssets);
+        if (this.assetHistory.length > 30) this.assetHistory.shift();
+        renderIncremental();
+        drawCharts();
+        this.autoSaveTemp();
+    }
+}
+// 原有图表绘制函数 100%完全保留
+function drawStockChart(stock, canvas) {
+    if (!canvas || !stock) return;
+    const ctx = canvas.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    const w = rect.width;
+    const h = rect.height;
+    if (w === 0 || h === 0) return;
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    ctx.scale(dpr, dpr);
+    const pad = { left: 15, right: 45, top: 15, bottom: 20 };
+    const cw = w - pad.left - pad.right;
+    const ch = h - pad.top - pad.bottom;
+    const zoomed = game.zoomStates[stock.id] || false;
+    const totalLen = stock.history.length;
+    const displayLen = zoomed ? 30 : 600;
+    const startIdx = Math.max(0, totalLen - displayLen);
+    const hist = stock.history.slice(startIdx);
+    if (hist.length < 2) return;
+    const min = Math.min(...hist);
+    const max = Math.max(...hist);
+    const range = max - min || 1;
+    const prev = hist[hist.length - 2];
+    const curr = hist[hist.length - 1];
+    const lineColor = curr >= prev ? '#2ed573' : '#ff4757';
+    ctx.clearRect(0, 0, w, h);
+    ctx.strokeStyle = '#eaecef';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let i = 0; i <= 4; i++) {
+        const y = pad.top + i * ch / 4;
+        ctx.moveTo(pad.left, y);
+        ctx.lineTo(pad.left + cw, y);
+        ctx.stroke();
+    }
+    ctx.closePath();
+    ctx.fillStyle = '#666';
+    ctx.font = '12px sans-serif';
+    ctx.textAlign = 'left';
+    for (let i = 0; i <= 4; i++) {
+        const y = pad.top + i * ch / 4;
+        const price = max - i * range / 4;
+        ctx.fillText(price.toFixed(1), pad.left + cw + 8, y + 4);
+    }
+    ctx.fillStyle = '#999';
+    ctx.font = '11px sans-serif';
+    ctx.textAlign = 'center';
+    const labels = zoomed ? ['30s', '20s', '10s', '0s'] : ['10m', '5m', '0m'];
+    const labelSteps = zoomed ? [0, hist.length/3, hist.length*2/3, hist.length-1] : [0, hist.length/2, hist.length-1];
+    labels.forEach((t, i) => {
+        const x = pad.left + labelSteps[i] * cw / (hist.length - 1);
+        ctx.fillText(t, x, h - 8);
+    });
+    ctx.strokeStyle = lineColor;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    hist.forEach((price, i) => {
+        const x = pad.left + i * cw / (hist.length - 1);
+        const y = pad.top + ch - ((price - min) / range) * ch;
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+    ctx.closePath();
+}
+function drawAssetChart() {
+    const canvas = document.getElementById('asset-chart');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    const w = rect.width;
+    const h = rect.height;
+    if (w === 0 || h === 0) return;
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    ctx.scale(dpr, dpr);
+    const hist = game.assetHistory;
+    if (!hist || hist.length < 2) return;
+    const base = 100000;
+    const percentHist = hist.map(v => (v - base) / base * 100);
+    const minPercent = Math.min(...percentHist);
+    const maxPercent = Math.max(...percentHist);
+    const rangePercent = maxPercent - minPercent || 1;
+    const pad = { left: 15, right: 40, top: 10, bottom: 15 };
+    const cw = w - pad.left - pad.right;
+    const ch = h - pad.top - pad.bottom;
+    ctx.clearRect(0, 0, w, h);
+    ctx.strokeStyle = '#eaecef';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let i = 0; i <= 3; i++) {
+        const y = pad.top + i * ch / 3;
+        ctx.moveTo(pad.left, y);
+        ctx.lineTo(pad.left + cw, y);
+        ctx.stroke();
+    }
+    ctx.closePath();
+    ctx.fillStyle = '#666';
+    ctx.font = '10px sans-serif';
+    ctx.textAlign = 'left';
+    for (let i = 0; i <= 3; i++) {
+        const y = pad.top + i * ch / 3;
+        const pct = maxPercent - i * rangePercent / 3;
+        ctx.fillText(pct.toFixed(1) + '%', w - pad.right + 5, y + 3);
+    }
+    ctx.strokeStyle = '#3b82f6';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    hist.forEach((val, i) => {
+        const x = pad.left + i * cw / (hist.length - 1);
+        const pct = (val - base) / base * 100;
+        const y = pad.top + ch - ((pct - minPercent) / rangePercent) * ch;
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+    ctx.closePath();
+}
+let drawTimer = null;
+function drawCharts() {
+    clearTimeout(drawTimer);
+    drawTimer = setTimeout(() => {
+        if (game.activeStockId) {
+            const stock = game.marketList.find(s => s.id === game.activeStockId);
+            const canvas = document.getElementById(`chart-${game.activeStockId}`);
+            if (stock && canvas) drawStockChart(stock, canvas);
+        }
+        drawAssetChart();
+    }, 50);
+}
+// 原有渲染函数 100%完全保留，仅修改事件文案为"买入"风格
+function renderHeader() {
+    document.getElementById('total-assets').textContent = `$${formatMoney(game.totalAssets)}`;
+    document.getElementById('available-cash').textContent = `$${formatMoney(game.cash)}`;
+}
+// 事件渲染（核心修改：改回"某某买入/卖出"文案风格）
+function renderEvents() {
+    const eventList = document.getElementById('event-list');
+    const eventKeys = Object.keys(game.events);
+    if (eventKeys.length === 0) {
+        eventList.innerHTML = '<span style="color:var(--text-mute);">暂无事件</span>';
+        return;
+    }
+    let html = '';
+    eventKeys.forEach(id => {
+        const ev = game.events[id];
+        let className = '', text = '';
+        // 事件类型对应样式和文案（改回风格）
+        if (ev.type === 'buy') {
+            className = 'up'; // 绿色左边框
+            // 随机名称，更真实
+            const bosses = ['币圈老炮', '大户老李', '矿场老板', '私募大佬', '社区大神'];
+            const randomBoss = bosses[Math.floor(Math.random() * bosses.length)];
+            text = `📈 ${randomBoss}大额买入 ${id.includes('_') ? 'ETH' : id}，价格拉升！`;
+        } else if (ev.type === 'freeze') {
+            className = 'down'; // 红色左边框
+            const bosses = ['华尔街巨鳄', '神秘鲸鱼', '机构资金', '对冲基金', '量化巨头'];
+            const randomBoss = bosses[Math.floor(Math.random() * bosses.length)];
+            text = `📉 ${randomBoss}大额卖出 ${id.includes('_') ? 'BTC' : id}，价格砸盘！`;
+        } else if (ev.type === 'liquidation') {
+            className = 'liquidation'; // 橙色左边框
+            text = '⚠️ 您的杠杆仓位已被强制平仓';
+        } else if (ev.type === 'bankrupt') {
+            className = 'liquidation'; // 橙色左边框
+            text = '⚠️ 保险池破产，仅赔付30%保额';
+        }
+        html += `<div class="event-item ${className}">${text}</div>`;
+    });
+    eventList.innerHTML = html;
+}
+function renderMarketFull() {
+    const marketList = document.getElementById('market-list');
+    let html = '';
+    game.marketList.forEach(stock => {
+        const isActive = game.activeStockId === stock.id;
+        const historyLen = stock.history.length;
+        const priceChange = historyLen >=2 ? ((stock.price - stock.history[historyLen-2])/stock.history[historyLen-2]*100).toFixed(2) : '0';
+        const changeClass = priceChange >=0 ? 'profit-green' : 'profit-red';
+        const hold = game.portfolio[stock.id];
+        const leverPositions = game.leveragePositions[stock.id];
+        let returnHtml = '';
+        if (leverPositions && leverPositions.length >0) {
+            let totalMargin = 0, totalPnl = 0;
+            leverPositions.forEach(pos => {
+                totalMargin += pos.margin;
+                if (pos.direction === 'long') totalPnl += (stock.price - pos.entryPrice) * pos.qty;
+                else totalPnl += (pos.entryPrice - stock.price) * pos.qty;
+            });
+            const rate = totalMargin >0 ? (totalPnl / totalMargin *100).toFixed(2) : '0.00';
+            const rateClass = totalPnl >=0 ? 'profit-green' : 'profit-red';
+            returnHtml = `<span><span class="${rateClass}">收益率:${totalPnl >=0?'+':''}${rate}%</span><span>(${leverPositions.length}仓)</span></span>`;
+        } else if (hold && hold.qty >0) {
+            const rate = hold.avgPrice ? ((stock.price - hold.avgPrice)/hold.avgPrice *100).toFixed(2) : '+∞';
+            const rateClass = rate >=0 ? 'profit-green' : 'profit-red';
+            returnHtml = `<span><span class="${rateClass}">收益率:${rate >=0?'+':''}${rate}%</span></span>`;
+        }
+        html += `
+        <div class="stock-item ${isActive ? 'active' : ''}" data-stock-id="${stock.id}">
+            <div class="stock-info-row">
+                <div class="symbol-area">
+                    <div>
+                        <span class="symbol">${stock.id}</span>
+                        ${hold && hold.qty >0 ? `<div class="holding-badge">持有: ${hold.qty.toFixed(3)}</div>` : ''}
+                    </div>
+                    <span class="price-change-compact ${changeClass}">${priceChange}%</span>
+                </div>
+                <div style="text-align: right;">
+                    <div class="price">$${formatMoney(stock.price)}</div>
+                    <div class="price-return">${returnHtml}</div>
+                </div>
+            </div>
+            <div class="details-area">
+                <div class="chart-header">
+                    <span></span>
+                    <button class="zoom-btn ${game.zoomStates[stock.id] ? 'active' : ''}" data-zoom-id="${stock.id}">
+                        ${game.zoomStates[stock.id] ? '30s' : '10m'}
+                    </button>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="chart-${stock.id}"></canvas>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 10px; margin-top: 15px;">
+                    <span>资金率</span>
+                    <b class="slider-percent">${game.sliderValues[stock.id] ?? 100}%</b>
+                </div>
+                <input type="range" min="1" max="100" class="stock-slider" value="${game.sliderValues[stock.id] ?? 100}" data-slider-id="${stock.id}">
+                <div style="display: flex; justify-content: space-between; font-size: 12px; margin-top: 12px; margin-bottom: 6px;">
+                    <span>杠杆倍数</span>
+                    <b class="slider-leverage">${game.leverageSliderValues[stock.id] ?? 10}x</b>
+                </div>
+                <input type="range" min="1" max="500" class="leverage-slider" style="accent-color: #3b82f6;" value="${game.leverageSliderValues[stock.id] ?? 10}" data-leverage-id="${stock.id}">
+                <div class="btn-row">
+                    <button class="btn btn-buy" data-trade="${stock.id}_BUY">买入</button>
+                    <button class="btn btn-sell" data-trade="${stock.id}_SELL">卖出</button>
+                </div>
+                <div class="btn-row">
+                    <button class="btn btn-long" data-trade="${stock.id}_LONG">做多</button>
+                    <button class="btn btn-short" data-trade="${stock.id}_SHORT">做空</button>
+                    <button class="btn btn-close" data-trade="${stock.id}_CLOSE_LEVER">全平</button>
+                </div>
+            </div>
+        </div>
+        `;
+    });
+    marketList.innerHTML = html;
+}
+function renderIncremental() {
+    renderHeader();
+    renderEvents();
+    if (game.activeTab === 'market') {
+        game.marketList.forEach(stock => {
+            const stockItem = document.querySelector(`.stock-item[data-stock-id="${stock.id}"]`);
+            if (!stockItem) return;
+            const historyLen = stock.history.length;
+            const priceChange = historyLen >=2 ? ((stock.price - stock.history[historyLen-2])/stock.history[historyLen-2]*100).toFixed(2) : '0';
+            const changeClass = priceChange >=0 ? 'profit-green' : 'profit-red';
+            const changeEl = stockItem.querySelector('.price-change-compact');
+            if (changeEl) {
+                changeEl.className = `price-change-compact ${changeClass}`;
+                changeEl.textContent = `${priceChange}%`;
+            }
+            const priceEl = stockItem.querySelector('.price');
+            if (priceEl) priceEl.textContent = `$${formatMoney(stock.price)}`;
+            const hold = game.portfolio[stock.id];
+            const leverPositions = game.leveragePositions[stock.id];
+            const returnEl = stockItem.querySelector('.price-return');
+            if (returnEl) {
+                let returnHtml = '';
+                if (leverPositions && leverPositions.length >0) {
+                    let totalMargin = 0, totalPnl = 0;
+                    leverPositions.forEach(pos => {
+                        totalMargin += pos.margin;
+                        if (pos.direction === 'long') totalPnl += (stock.price - pos.entryPrice) * pos.qty;
+                        else totalPnl += (pos.entryPrice - stock.price) * pos.qty;
+                    });
+                    const rate = totalMargin >0 ? (totalPnl / totalMargin *100).toFixed(2) : '0.00';
+                    const rateClass = totalPnl >=0 ? 'profit-green' : 'profit-red';
+                    returnHtml = `<span><span class="${rateClass}">收益率:${totalPnl >=0?'+':''}${rate}%</span><span>(${leverPositions.length}仓)</span></span>`;
+                } else if (hold && hold.qty >0) {
+                    const rate = hold.avgPrice ? ((stock.price - hold.avgPrice)/hold.avgPrice *100).toFixed(2) : '+∞';
+                    const rateClass = rate >=0 ? 'profit-green' : 'profit-red';
+                    returnHtml = `<span><span class="${rateClass}">收益率:${rate >=0?'+':''}${rate}%</span></span>`;
+                }
+                returnEl.innerHTML = returnHtml;
+            }
+            const holdBadge = stockItem.querySelector('.holding-badge');
+            const symbolArea = stockItem.querySelector('.symbol-area > div');
+            if (hold && hold.qty >0) {
+                if (holdBadge) holdBadge.textContent = `持有: ${hold.qty.toFixed(3)}`;
+                else if (symbolArea) {
+                    const newBadge = document.createElement('div');
+                    newBadge.className = 'holding-badge';
+                    newBadge.textContent = `持有: ${hold.qty.toFixed(3)}`;
+                    symbolArea.appendChild(newBadge);
+                }
+            } else {
+                if (holdBadge) holdBadge.remove();
+            }
+            const sliderPercentEl = stockItem.querySelector('.slider-percent');
+            if (sliderPercentEl) sliderPercentEl.textContent = `${game.sliderValues[stock.id] ?? 100}%`;
+            const leverageEl = stockItem.querySelector('.slider-leverage');
+            if (leverageEl) leverageEl.textContent = `${game.leverageSliderValues[stock.id] ?? 10}x`;
+        });
+    }
+    if (game.activeTab === 'mining') renderMining();
+    if (game.activeTab === 'assets') renderAssets();
+    if (game.activeTab === 'bank') renderBank();
+    if (game.activeTab === 'oversea') overseaRenderUI(); // 出海页面同步刷新
+}
+function renderMining() {
+    const btcHold = game.portfolio['BTC'];
+    document.getElementById('mining-btc').textContent = btcHold ? btcHold.qty.toFixed(3) : '0.000';
+    document.getElementById('mining-hashrate').textContent = `${game.mining.totalHashrate.toFixed(0)} H/s`;
+    const devicesContainer = document.getElementById('mining-devices');
+    let html = '';
+    Object.entries(game.mining.devices).forEach(([key, dev]) => {
+        const canUnlock = !dev.unlocked && (
+            key === 'entry' ||
+            (key === 'pro' && game.mining.devices.entry.unlocked) ||
+            (key === 'main' && game.mining.devices.pro.unlocked) ||
+            (key === 'asic' && game.mining.devices.main.unlocked)
+        ) && game.cash >= dev.unlockCost;
+        const canExpand = dev.unlocked && game.cash >= (dev.upgradeCost * dev.buyCount);
+        const totalCost = dev.upgradeCost * dev.buyCount;
+        const costClass = game.cash < totalCost ? 'profit-red' : 'profit-green';
+        html += `
+        <div class="device-card">
+            <div class="device-header">
+                <span class="device-name">${dev.name} ${dev.unlocked ? `<span class="device-status">已解锁</span>` : ''}</span>
+                <span class="device-count">${dev.count} 台</span>
+            </div>
+            <div class="device-details">
+                <span>单台算力: ${dev.hashrate} H/s</span>
+                <span>解锁成本: $${dev.unlockCost.toLocaleString()}</span>
+                <span>单台升级: $${dev.upgradeCost.toLocaleString()}</span>
+            </div>
+            ${dev.unlocked ? `
+            <div style="margin-bottom: 12px; padding: 0 4px;">
+                <div style="display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px;">
+                    <span style="color: var(--text-mute)">购买数量</span>
+                    <b class="slider-percent">${dev.buyCount} 台</b>
+                </div>
+                <input type="range" min="1" max="100" step="1" value="${dev.buyCount}" style="width: 100%; accent-color: #3b82f6; height: 4px;" data-device-count="${key}">
+                <div style="font-size: 10px; color: var(--text-mute); margin-top: 4px; text-align: right;">
+                    总计: <span style="color: ${costClass}">$${totalCost.toLocaleString()}</span>
+                </div>
+            </div>
+            ` : ''}
+            <div class="device-actions">
+                <button class="device-btn ${dev.unlocked ? 'btn-disabled' : canUnlock ? 'btn-unlock' : 'btn-disabled'}" ${dev.unlocked ? 'disabled' : ''} data-device-unlock="${key}">
+                    ${dev.unlocked ? '已解锁' : `解锁 $${dev.unlockCost.toLocaleString()}`}
+                </button>
+                <button class="device-btn ${!dev.unlocked ? 'btn-disabled' : canExpand ? 'btn-expand' : 'btn-disabled'}" ${!dev.unlocked ? 'disabled' : ''} data-device-expand="${key}">
+                    批量升级
+                </button>
+            </div>
+        </div>
+        `;
+    });
+    devicesContainer.innerHTML = html;
+}
+function renderAssets() {
+    let marketValue = 0;
+    game.marketList.forEach(item => {
+        const hold = game.portfolio[item.id];
+        if (hold && hold.qty >0) marketValue += hold.qty * item.price;
+    });
+    document.getElementById('hold-market-value').textContent = `$${formatMoney(marketValue)}`;
+    const profitLoss = game.totalAssets - 100000;
+    document.getElementById('total-profit-loss').textContent = `${profitLoss >=0 ? '+' : ''}$${formatMoney(profitLoss)}`;
+    document.getElementById('default-tp').textContent = `${game.defaultTP}%`;
+    document.getElementById('default-sl').textContent = `${game.defaultSL}%`;
+    document.getElementById('tp-slider').value = game.defaultTP;
+    document.getElementById('sl-slider').value = game.defaultSL;
+    const portfolioList = document.getElementById('portfolio-list');
+    let html = '';
+    Object.entries(game.portfolio).forEach(([id, item]) => {
+        const coin = game.marketList.find(c => c.id === id);
+        const price = coin ? coin.price : 0;
+        const rate = item.avgPrice ? ((price - item.avgPrice)/item.avgPrice *100).toFixed(3) : '+∞';
+        const rateClass = rate >=0 ? 'profit-green' : 'profit-red';
+        html += `
+        <div class="hold-item">
+            <div class="hold-left">
+                <b>${id}</b>
+                <span class="${rateClass}">${rate >=0 ? '+' : ''}${rate}%</span>
+            </div>
+            <span>${item.qty.toFixed(3)} 枚 · 均价 $${formatMoney(item.avgPrice)}</span>
+        </div>
+        `;
+    });
+    Object.entries(game.leveragePositions).forEach(([id, positions]) => {
+        const coin = game.marketList.find(c => c.id === id);
+        const currentPrice = coin ? coin.price : 0;
+        positions.forEach((pos, idx) => {
+            let rate = 0;
+            if (pos.direction === 'long') {
+                rate = ((currentPrice - pos.entryPrice) / pos.entryPrice * pos.leverage * 100).toFixed(3);
+            } else {
+                rate = ((pos.entryPrice - currentPrice) / pos.entryPrice * pos.leverage * 100).toFixed(3);
+            }
+            const rateClass = rate >=0 ? 'profit-green' : 'profit-red';
+            const directionText = pos.direction === 'long' ? '📈 多仓' : '📉 空仓';
+            html += `
+            <div class="hold-item">
+                <div class="hold-left">
+                    <b>${id} ${directionText} #${idx+1}</b>
+                    <span class="${rateClass}">${rate >=0 ? '+' : ''}${rate}%</span>
+                </div>
+                <span>${pos.qty.toFixed(3)} 枚 · 开仓价 $${formatMoney(pos.entryPrice)} · ${pos.leverage}x杠杆</span>
+                <div class="hold-tpsl">
+                    ${pos.takeProfit ? `<span>止盈: $${formatMoney(pos.takeProfit)}</span>` : ''}
+                    ${pos.stopLoss ? `<span>止损: $${formatMoney(pos.stopLoss)}</span>` : ''}
+                </div>
+            </div>
+            `;
+        });
+    });
+    if (html === '') html = '<p style="color:var(--text-mute); text-align:center; padding:20px 0;">暂无持仓</p>';
+    portfolioList.innerHTML = html;
+}
+function renderBank() {
+    document.getElementById('bank-deposit').textContent = `$${formatMoney(game.bankDeposit)}`;
+    document.getElementById('loan-amount').textContent = `$${formatMoney(game.loanAmount)}`;
+    const availableLoan = Math.max(0, 100000 + game.totalAssets * 0.5 - game.loanPrincipal);
+    document.getElementById('loan-available').textContent = `$${formatMoney(availableLoan)}`;
+    document.getElementById('bank-slider-percent').textContent = `${game.bankSliderPercent}%`;
+    document.getElementById('bank-slider').value = game.bankSliderPercent;
+    document.getElementById('insurance-pool').textContent = `$${formatMoney(game.insurance.poolBalance)}`;
+    document.getElementById('insurance-capacity').textContent = `$${formatMoney(game.getInsuranceCapacity())}`;
+    const totalInsured = game.insurance.policies.reduce((sum, p) => sum + p.insuredAmount, 0);
+    document.getElementById('insurance-total').textContent = `$${formatMoney(totalInsured)}`;
+    document.getElementById('insurance-amount').value = game.buyAmount;
+}
+function renderAll() {
+    renderHeader();
+    renderEvents();
+    if (game.activeTab === 'mining') renderMining();
+    if (game.activeTab === 'assets') renderAssets();
+    if (game.activeTab === 'bank') renderBank();
+    if (game.activeTab === 'oversea') overseaRenderUI(); // 出海页面同步刷新
+}
+// 全局实例
+const game = new Game();
+// 页面加载完成初始化
+document.addEventListener('DOMContentLoaded', () => {
+    game.init();
+    renderMarketFull();
+    game.marketDOMInited = true;
+    // 初始化出海UI
+    overseaRenderUI();
+    requestAnimationFrame(() => drawCharts());
+    // 全局点击事件 完全保留，新增出海tab切换支持
+    document.addEventListener('click', (e) => {
+        if (e.target.id === 'btn-close-all-leverage') {
+            e.stopPropagation();
+            game.closeAllLeveragePositions();
+            return;
+        }
+        const tradeBtn = e.target.closest('[data-trade]');
+        if (tradeBtn) {
+            e.stopPropagation();
+            const [stockId, action] = tradeBtn.dataset.trade.split('_');
+            game.trade(stockId, action);
+            return;
+        }
+        const zoomBtn = e.target.closest('[data-zoom-id]');
+        if (zoomBtn) {
+            e.stopPropagation();
+            game.toggleZoom(zoomBtn.dataset.zoomId);
+            return;
+        }
+        const stockRow = e.target.closest('.stock-info-row');
+        if (stockRow) {
+            e.stopPropagation();
+            const stockId = stockRow.closest('.stock-item').dataset.stockId;
+            game.toggleStockDetail(stockId);
+            return;
+        }
+        const tabBtn = e.target.closest('[data-tab]');
+        if (tabBtn) {
+            e.stopPropagation();
+            game.switchTab(tabBtn.dataset.tab);
+            return;
+        }
+        const unlockBtn = e.target.closest('[data-device-unlock]');
+        if (unlockBtn) {
+            e.stopPropagation();
+            game.unlockDevice(unlockBtn.dataset.deviceUnlock);
+            return;
+        }
+        const expandBtn = e.target.closest('[data-device-expand]');
+        if (expandBtn) {
+            e.stopPropagation();
+            game.expandDevice(expandBtn.dataset.deviceExpand);
+            return;
+        }
+        if (e.target.id === 'btn-deposit') {
+            e.stopPropagation();
+            game.depositMoney();
+            return;
+        }
+        if (e.target.id === 'btn-withdraw') {
+            e.stopPropagation();
+            game.withdrawMoney();
+            return;
+        }
+        if (e.target.id === 'btn-take-loan') {
+            e.stopPropagation();
+            game.takeLoan();
+            return;
+        }
+        if (e.target.id === 'btn-repay-loan') {
+            e.stopPropagation();
+            game.repayLoan();
+            return;
+        }
+        if (e.target.id === 'btn-buy-insurance') {
+            e.stopPropagation();
+            const amount = parseFloat(document.getElementById('insurance-amount').value) || 0;
+            game.buyInsurance(amount);
+            return;
+        }
+        if (e.target.id === 'btn-save-data') {
+            e.stopPropagation();
+            game.manualSave();
+            return;
+        }
+        if (e.target.id === 'btn-load-data') {
+            e.stopPropagation();
+            game.manualLoad();
+            return;
+        }
+        if (e.target.id === 'btn-reset-data') {
+            e.stopPropagation();
+            game.resetAllData();
+            return;
+        }
+    });
+        // 原有滑块输入事件监听 完全保留
+document.addEventListener('input', (e) => {
+    const target = e.target;
+    // 原有逻辑（保留不变）
+    if (target.dataset.sliderId) {
+        game.sliderValues[target.dataset.sliderId] = parseFloat(target.value);
+        renderIncremental();
+    }
+    else if (target.dataset.leverageId) {
+        game.leverageSliderValues[target.dataset.leverageId] = parseFloat(target.value);
+        renderIncremental();
+    }
+    else if (target.id === 'bank-slider') {
+        game.bankSliderPercent = parseFloat(target.value);
+        renderBank();
+    }
+    else if (target.dataset.deviceCount) {
+        game.mining.devices[target.dataset.deviceCount].buyCount = parseInt(target.value);
+        renderMining();
+    }
+    else if (target.id === 'tp-slider') {
+        game.defaultTP = parseFloat(target.value);
+        renderAssets();
+    }
+    else if (target.id === 'sl-slider') {
+        game.defaultSL = parseFloat(target.value);
+        renderAssets();
+    }
+    else if (target.id === 'insurance-amount') {
+        game.buyAmount = parseFloat(target.value) || 0;
+    }
+    // 出海滑块输入监听（原有买卖滑动条，保留）
+    else if (target.classList.contains('oversea-trade-slider')) {
+        const countryType = target.id.split('-')[1];
+        overseaUpdateSlider(countryType);
+    }
+
+    // 👇 新增：转账/投资滑动条事件（必须添加！）
+    else if (target.id === 'oversea-transfer-out-slider') {
+        overseaGlobal.sliderPercent.transferOut = parseInt(target.value);
+        overseaUpdateAllSliders();
+    }
+    else if (target.id === 'oversea-transfer-in-slider') {
+        overseaGlobal.sliderPercent.transferIn = parseInt(target.value);
+        overseaUpdateAllSliders();
+    }
+    else if (target.id === 'oversea-small-invest-slider') {
+        overseaGlobal.sliderPercent.smallInvest = parseInt(target.value);
+        overseaUpdateAllSliders();
+    }
+    else if (target.id === 'oversea-mid-invest-slider') {
+        overseaGlobal.sliderPercent.midInvest = parseInt(target.value);
+        overseaUpdateAllSliders();
+    }
+    else if (target.id === 'oversea-high-invest-slider') {
+        overseaGlobal.sliderPercent.highInvest = parseInt(target.value);
+        overseaUpdateAllSliders();
+    }
+    // 👆 新增结束
+});
+
+    // 原有主循环定时器 完全保留
+    setInterval(() => game.priceUpdater(), 2000);
+    setInterval(() => game.applyInterest(), 10000);
+    setInterval(() => game.checkEvents(), 2500);
+});
+</script>
+</body>
+</html>
+  
