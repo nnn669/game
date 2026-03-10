@@ -54,7 +54,7 @@
             color: #333;
         }
         .current-price {
-            font-size: 18px;
+            font-size: 28px;
             font-weight: 700;
         }
         .up {
@@ -244,9 +244,9 @@
             border-color: #4285f4;
         }
         .quick-btn.active[data-percent="50"] {
-            background: #fbbc05;
-            color: white;
-            border-color: #fbbc05;
+            background: #ffffb3; /* 浅黄色 */
+            color: #333;
+            border-color: #ffffb3;
         }
         .quick-btn.active[data-percent="75"] {
             background: #ff9800;
@@ -542,7 +542,7 @@
         #hourly-profit,
         #position-profit,
         #available-balance {
-            font-size: 16px; /* 其他三个小2px */
+            font-size: 18px; /* 其他三个小2px */
         }
 
         .top-left {
@@ -675,7 +675,7 @@
             font-weight: 600;
         }
 
-        /* ---------- 兑换码样式 ---------- */
+        /* 兑换码样式 */
         .redeem-container {
             padding: 20px;
             text-align: center;
@@ -804,7 +804,7 @@
             </div>
             <!-- 右上：当时盈亏（一小时） -->
             <div class="asset-item top-right">
-                <div class="asset-label">时盈亏</div>
+                <div class="asset-label">当时盈亏 (一小时)</div>
                 <div class="asset-amount" id="hourly-profit">0.00</div>
             </div>
             <!-- 左下：持仓盈亏 -->
@@ -837,14 +837,14 @@
 <div class="page" id="page-history">
     <div class="card">
         <div class="card-title">综合服务</div>
-        <!-- 六个功能卡片 -->
+        <!-- 六个功能卡片（原三个，现增加赌石） -->
         <div id="function-grid" class="function-grid">
             <div class="function-card" data-function="property">🏠 房产</div>
             <div class="function-card" data-function="redeem">🎁 兑换码</div>
             <div class="function-card" data-function="warehouse">📦 仓库</div>
+            <div class="function-card" data-function="gamble">🎲 赌石</div>
             <div class="function-card" data-function="dev1">⚙️ 开发中</div>
             <div class="function-card" data-function="dev2">⚙️ 开发中</div>
-            <div class="function-card" data-function="dev3">⚙️ 开发中</div>
         </div>
         <!-- 房产子界面（初始隐藏） -->
         <div id="property-subpage" style="display: none;">
@@ -867,13 +867,52 @@
                 <div id="redeem-message" class="redeem-message"></div>
             </div>
         </div>
-        <!-- 仓库子界面（初始隐藏，显示开发中） -->
+        <!-- 仓库子界面（初始隐藏） -->
         <div id="warehouse-subpage" style="display: none;">
             <div style="display: flex; align-items: center; margin-bottom: 16px;">
                 <button id="back-to-functions-warehouse" class="btn" style="width: auto; margin-right: 12px;">← 返回</button>
                 <span style="font-weight: 600;">仓库</span>
             </div>
             <div class="warehouse-default">仓库功能开发中，敬请期待</div>
+        </div>
+        <!-- 赌石子界面（初始隐藏） -->
+        <div id="gamble-subpage" style="display: none;">
+            <div style="display: flex; align-items: center; margin-bottom: 16px;">
+                <button id="back-to-functions-gamble" class="btn" style="width: auto; margin-right: 12px;">← 返回</button>
+                <span style="font-weight: 600;">赌石</span>
+            </div>
+            <!-- 三个石头卡片（互换概率显示） -->
+            <div style="display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin-bottom: 20px;">
+                <div class="property-card" style="flex:1; min-width:150px;">
+                    <div class="property-name">破裂原石</div>
+                    <div>价格: 1000</div>
+                    <div style="font-size:12px; color:#666;">
+                        废料70% | 普通玉25% (0.8~1.2倍)<br>
+                        冰种4% (2~4倍) | 帝王绿1% (10倍)
+                    </div>
+                </div>
+                <div class="property-card" style="flex:1; min-width:150px;">
+                    <div class="property-name">小缝原石</div>
+                    <div>价格: 10000</div>
+                    <div style="font-size:12px; color:#666;">
+                        废料60% | 普通玉25% (0.8~1.2倍)<br>
+                        冰种12% (2~4倍) | 帝王绿2.5% (8倍) | 传说0.5% (20倍)
+                    </div>
+                </div>
+                <div class="property-card" style="flex:1; min-width:150px;">
+                    <div class="property-name">完好原石</div>
+                    <div>价格: 100000</div>
+                    <div style="font-size:12px; color:#666;">
+                        废料50% | 普通玉40% (0.8~1.2倍)<br>
+                        冰种8% (2~5倍) | 帝王绿1.5% (15倍) | 传说0.5% (50倍)
+                    </div>
+                </div>
+            </div>
+            <!-- 库存与批量操作卡片 -->
+            <div class="card" style="margin:0; padding:16px;">
+                <div style="font-weight:600; margin-bottom:12px;">我的原石</div>
+                <div id="gamble-stock"></div>
+            </div>
         </div>
     </div>
 </div>
@@ -892,11 +931,12 @@
         // ==================== 初始化数据 ====================
         // 股票列表：四个股票，分别对应千位、百位、十位、个位股价区间
         const stockList = [
-            { code: "X001", name: "星途科技", desc: "千位股价", price: Math.floor(Math.random() * 4000 + 1000), basePrice: 0 }, // 1000~5000
-            { code: "J002", name: "金汇控股", desc: "百位股价", price: Math.floor(Math.random() * 800 + 100), basePrice: 0 },   // 100~900
-            { code: "K003", name: "康芯医疗", desc: "十位股价", price: Math.floor(Math.random() * 80 + 10), basePrice: 0 },     // 10~90
-            { code: "R004", name: "锐能新材", desc: "个位股价", price: Math.floor(Math.random() * 8 + 1), basePrice: 0 }        // 1~9
-        ];
+    { code: "X001", name: "石油", desc: "能源行业", price: 350.00, basePrice: 350.00 },
+    { code: "J002", name: "稀土", desc: "战略资源", price: 120.50, basePrice: 120.50 },
+    { code: "K003", name: "电力", desc: "公用事业", price: 88.88, basePrice: 88.88 },
+    { code: "R004", name: "科创", desc: "科技创新", price: 500.00, basePrice: 500.00 },
+    { code: "X005", name: "粮油", desc: "民生消费", price: 65.30, basePrice: 65.30 }
+];
         // 设置基准价格（用于涨跌幅计算）
         stockList.forEach(s => s.basePrice = s.price);
 
@@ -913,6 +953,13 @@
             '1234567890': 100000,
             'gp666': 500000,
             'gp123456': 1000000
+        };
+
+        // 赌石库存
+        let gambleStones = {
+            cheap: 0,   // 破裂原石
+            medium: 0,  // 小缝原石
+            expensive: 0 // 完好原石
         };
 
         let gameCycle = 0;             // 全局循环计数器（用于房产时间）
@@ -943,7 +990,7 @@
             hasNewLiquidation: false       // 是否有新的爆仓
         };
 
-        // 初始化一小时历史数组
+        // 初始化一小时历史
         hourlyProfitHistory.push(10000);
 
         // ==================== 工具函数：生成初始K线 ====================
@@ -1028,6 +1075,10 @@
         const backToFunctionsRedeem = document.getElementById('back-to-functions-redeem');
         const warehouseSubpage = document.getElementById('warehouse-subpage');
         const backToFunctionsWarehouse = document.getElementById('back-to-functions-warehouse');
+        // 赌石页面元素
+        const gambleSubpage = document.getElementById('gamble-subpage');
+        const backToFunctionsGamble = document.getElementById('back-to-functions-gamble');
+        const gambleStockContainer = document.getElementById('gamble-stock');
 
         // 当前方向（做多/做空）和杠杆
         let currentDir = "long";
@@ -1074,18 +1125,19 @@
 
         // ==================== 方向切换 ====================
         dirLong.addEventListener("click", () => {
-            dirLong.classList.add("active");
-            dirShort.classList.remove("active");
-            currentDir = "long";
-            openBtn.textContent = "做多开仓";
-        });
-        dirShort.addEventListener("click", () => {
-            dirShort.classList.add("active");
-            dirLong.classList.remove("active");
-            currentDir = "short";
-            openBtn.textContent = "做空开仓";
-        });
-
+    dirLong.classList.add("active");
+    dirShort.classList.remove("active");
+    currentDir = "long";
+    openBtn.textContent = "做多开仓";
+    openBtn.style.backgroundColor = "#00c48c"; // 做多绿色
+});
+dirShort.addEventListener("click", () => {
+    dirShort.classList.add("active");
+    dirLong.classList.remove("active");
+    currentDir = "short";
+    openBtn.textContent = "做空开仓";
+    openBtn.style.backgroundColor = "#ff5252"; // 做空红色
+});
         // ==================== 2分钟K线切换 ====================
         timeToggle.addEventListener("click", () => {
             game.useShortCandle = !game.useShortCandle;
@@ -1264,6 +1316,7 @@
                     propertySubpage.style.display = 'none';
                     redeemSubpage.style.display = 'none';
                     warehouseSubpage.style.display = 'none';
+                    gambleSubpage.style.display = 'none';
                 }
             });
         });
@@ -1277,12 +1330,14 @@
                     propertySubpage.style.display = 'block';
                     redeemSubpage.style.display = 'none';
                     warehouseSubpage.style.display = 'none';
+                    gambleSubpage.style.display = 'none';
                     renderProperties();
                 } else if (func === 'redeem') {
                     functionGrid.style.display = 'none';
                     propertySubpage.style.display = 'none';
                     redeemSubpage.style.display = 'block';
                     warehouseSubpage.style.display = 'none';
+                    gambleSubpage.style.display = 'none';
                     redeemMessage.textContent = '';
                     redeemInput.value = '';
                 } else if (func === 'warehouse') {
@@ -1290,6 +1345,14 @@
                     propertySubpage.style.display = 'none';
                     redeemSubpage.style.display = 'none';
                     warehouseSubpage.style.display = 'block';
+                    gambleSubpage.style.display = 'none';
+                } else if (func === 'gamble') {
+                    functionGrid.style.display = 'none';
+                    propertySubpage.style.display = 'none';
+                    redeemSubpage.style.display = 'none';
+                    warehouseSubpage.style.display = 'none';
+                    gambleSubpage.style.display = 'block';
+                    renderGambleStock();
                 } else {
                     alert('功能开发中，敬请期待');
                 }
@@ -1307,6 +1370,10 @@
         });
         backToFunctionsWarehouse.addEventListener('click', () => {
             warehouseSubpage.style.display = 'none';
+            functionGrid.style.display = 'flex';
+        });
+        backToFunctionsGamble.addEventListener('click', () => {
+            gambleSubpage.style.display = 'none';
             functionGrid.style.display = 'flex';
         });
 
@@ -1503,7 +1570,7 @@
                         <div>杠杆 ${p.leverage}x</div>
                     </div>
                     <div class="history-row" style="margin-top:4px">
-                        <div>股数：${p.quantity}</div>
+                        <div>数量：${p.quantity}</div>
                         <div>开仓价：${p.openPrice.toFixed(2)}</div>
                     </div>
                     <div class="history-row">
@@ -2108,6 +2175,132 @@
                 renderProperties();
             }
         }
+
+        // ==================== 赌石功能 ====================
+        // 渲染赌石库存和操作界面
+        function renderGambleStock() {
+            if (!gambleStockContainer) return;
+            const stones = [
+                { key: 'cheap', name: '破裂原石', price: 1000 },
+                { key: 'medium', name: '小缝原石', price: 10000 },
+                { key: 'expensive', name: '完好原石', price: 100000 }
+            ];
+            let html = '';
+            stones.forEach(s => {
+                const count = gambleStones[s.key];
+                html += `
+                <div style="margin-bottom:16px; border-bottom:1px solid #f0f0f0; padding-bottom:12px;">
+                    <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                        <span>${s.name}</span>
+                        <span>持有: <span id="gamble-count-${s.key}">${count}</span></span>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <input type="range" id="gamble-slider-${s.key}" min="0" max="100" value="1" style="flex:2;">
+                        <span id="gamble-slider-value-${s.key}">1</span>
+                    </div>
+                    <div style="display:flex; gap:8px; margin-top:8px;">
+                        <button class="btn btn-primary" onclick="buyGambleStone('${s.key}', ${s.price})">购买</button>
+                        <button class="btn btn-success" onclick="openGambleStone('${s.key}', ${s.price})">开石</button>
+                    </div>
+                </div>
+                `;
+            });
+            gambleStockContainer.innerHTML = html;
+            // 为滑动条绑定事件
+            stones.forEach(s => {
+                const slider = document.getElementById(`gamble-slider-${s.key}`);
+                const valueSpan = document.getElementById(`gamble-slider-value-${s.key}`);
+                if (slider) {
+                    slider.addEventListener('input', () => {
+                        valueSpan.textContent = slider.value;
+                    });
+                }
+            });
+        }
+
+        // 购买原石（全局函数，供按钮调用）
+        window.buyGambleStone = function(type, price) {
+            const slider = document.getElementById(`gamble-slider-${type}`);
+            const qty = parseInt(slider.value);
+            if (qty <= 0) return;
+            const cost = price * qty;
+            if (game.cash < cost) {
+                alert('现金不足');
+                return;
+            }
+            game.cash -= cost;
+            gambleStones[type] += qty;
+            updateAsset();
+            // 更新持有数量显示
+            const countSpan = document.getElementById(`gamble-count-${type}`);
+            if (countSpan) countSpan.textContent = gambleStones[type];
+        };
+
+        // 开石（全局函数） - 概率已互换
+        window.openGambleStone = function(type, price) {
+            const slider = document.getElementById(`gamble-slider-${type}`);
+            const qty = parseInt(slider.value);
+            if (qty <= 0) return;
+            if (gambleStones[type] < qty) {
+                alert('原石不足');
+                return;
+            }
+            gambleStones[type] -= qty;
+            let totalProfit = 0;
+            // 定义概率和收益倍数（已互换：小缝原石用完好原石的概率，完好原石用小缝原石的概率）
+            let probs, ranges;
+            if (type === 'cheap') {
+                probs = [0.7, 0.25, 0.04, 0.01]; // 废料、普通、冰种、帝王绿
+                ranges = [
+                    [0, 0],
+                    [0.8, 1.2],
+                    [2, 4],
+                    [10, 10]
+                ];
+            } else if (type === 'medium') {
+                // 小缝原石使用原先完好原石的概率
+                probs = [0.6, 0.25, 0.12, 0.025, 0.005]; // 废料、普通、冰种、帝王绿、传说
+                ranges = [
+                    [0, 0],
+                    [0.8, 1.2],
+                    [2, 4],
+                    [8, 8],
+                    [20, 20]
+                ];
+            } else {
+                // 完好原石使用原先小缝原石的概率
+                probs = [0.5, 0.4, 0.08, 0.015, 0.005]; // 废料、普通、冰种、帝王绿、传说
+                ranges = [
+                    [0, 0],
+                    [0.8, 1.2],
+                    [2, 5],
+                    [15, 15],
+                    [50, 50]
+                ];
+            }
+            // 累积概率
+            const cumProbs = [];
+            let sum = 0;
+            for (let p of probs) {
+                sum += p;
+                cumProbs.push(sum);
+            }
+            for (let i = 0; i < qty; i++) {
+                const r = Math.random();
+                let idx = cumProbs.findIndex(cp => r < cp);
+                if (idx === -1) idx = probs.length - 1; // 浮点误差处理
+                const [minMul, maxMul] = ranges[idx];
+                const mul = minMul + Math.random() * (maxMul - minMul);
+                const profit = price * mul;
+                totalProfit += profit;
+            }
+            game.cash += totalProfit;
+            updateAsset();
+            // 更新持有数量
+            const countSpan = document.getElementById(`gamble-count-${type}`);
+            if (countSpan) countSpan.textContent = gambleStones[type];
+            alert(`开石 ${qty} 个，总收益: ${totalProfit.toFixed(2)} 元`);
+        };
 
         // ==================== 股票价格更新循环 ====================
         const originalInterval = setInterval(() => {
