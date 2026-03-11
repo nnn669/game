@@ -527,8 +527,8 @@
         /* ---------- 资产卡片新布局（2x2网格） ---------- */
         .asset-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
         }
         .asset-item {
             text-align: center;
@@ -539,28 +539,23 @@
             margin-bottom: 4px;
         }
         .asset-amount {
-            font-size: clamp(16px, 4.8vw, 22px); /* 默认，下面通过ID单独调整 */
+            font-size: clamp(13px, 3.8vw, 17px); /* 默认，下面通过ID单独调整 */
             font-weight: 700;
         }
         /* 单独调整四个数值的字体大小 */
         #total-asset {
-            font-size: clamp(18px, 5.5vw, 24px); /* 总资产大2px */
+            font-size: clamp(15px, 4.5vw, 20px); /* 总资产 */
         }
-        #hourly-profit,
         #position-profit,
         #available-balance {
-            font-size: clamp(15px, 4.5vw, 19px); /* 其他三个小2px */
+            font-size: clamp(12px, 3.5vw, 16px); /* 小值 */
         }
 
         .top-left {
-            grid-column: 1 / 2;
-            grid-row: 1 / 2;
             text-align: left;
         }
         .top-right {
-            grid-column: 2 / 3;
-            grid-row: 1 / 2;
-            text-align: right;
+            text-align: center;
         }
         .bottom-left {
             grid-column: 1 / 2;
@@ -862,7 +857,7 @@
             min-height: 20px;
         }
 
-        /* ---------- 新闻事件 ---------- */
+
         .news-item {
             padding: 12px 0;
             border-bottom: 1px solid #f5f5f5;
@@ -892,54 +887,6 @@
             padding:12px 14px;
         }
 
-        /* ---------- NPC排行 ---------- */
-        .npc-rank-item {
-            display:flex;
-            align-items:center;
-            gap:12px;
-            padding:10px 0;
-            border-bottom:1px solid #f5f5f5;
-            font-size:clamp(12px,3.2vw,14px);
-        }
-        .npc-rank-item:last-child { border-bottom:none; }
-        .npc-rank-num {
-            width:24px;
-            height:24px;
-            border-radius:50%;
-            background:#f0f0f0;
-            display:flex;align-items:center;justify-content:center;
-            font-size:clamp(11px,2.8vw,13px);
-            font-weight:700;
-            flex-shrink:0;
-        }
-        .npc-rank-num.gold   { background:#ffd700; color:#7a5a00; }
-        .npc-rank-num.silver { background:#c0c0c0; color:#444; }
-        .npc-rank-num.bronze { background:#cd7f32; color:#fff; }
-        .npc-rank-num.player { background:#4285f4; color:#fff; }
-        .npc-follow-btn {
-            margin-left:auto;
-            padding:5px 12px;
-            border-radius:20px;
-            border:1px solid #4285f4;
-            background:white;
-            color:#4285f4;
-            font-size:clamp(11px,2.8vw,13px);
-            cursor:pointer;
-            white-space:nowrap;
-        }
-        .npc-follow-btn.active {
-            background:#4285f4;
-            color:white;
-        }
-        .npc-follow-btn.reverse {
-            border-color:#ff5252;
-            color:#ff5252;
-            background:white;
-        }
-        .npc-follow-btn.reverse.active {
-            background:#ff5252;
-            color:white;
-        }
         @keyframes futBlink { from{opacity:1} to{opacity:0.3} }
     </style>
 </head>
@@ -962,12 +909,7 @@
                 <span class="current-price" id="trade-current-price" style="font-size:clamp(14px,4vw,18px);">868.88</span>
                 <span class="change" id="trade-change">-0.00%</span>
             </div>
-            <!-- 经济周期条 -->
-            <div id="cycle-bar" style="display:flex;align-items:center;gap:6px;margin-top:4px;font-size:clamp(11px,2.8vw,13px);color:#555;">
-                <span id="cycle-dot" style="width:8px;height:8px;border-radius:50%;background:#ff9800;flex-shrink:0;display:inline-block;"></span>
-                <span id="cycle-label">震荡行情</span>
-                <span id="cycle-desc" style="margin-left:auto;font-size:clamp(10px,2.5vw,12px);color:#aaa;">上涨概率50%</span>
-            </div>
+
             <div class="time-toggle" id="time-toggle">2m</div>
         </div>
         <div class="chart-area" style="position:relative;">
@@ -1003,6 +945,7 @@
                     </div>
                     <div class="margin-info" id="spot-cost-row">预计花费 <span id="margin-amount">0.00</span> / 共 <span id="total-amount">0</span> 股</div>
                     <button class="open-btn" id="open-position-btn" style="width:100%;background:#00c48c;margin-top:6px;">买入</button>
+                    <button id="one-click-sell-btn" class="open-btn" style="width:100%;background:#ff5252;margin-top:6px;">一键清仓（当前股票）</button>
                     <button id="dir-long" style="display:none;"></button>
                     <button id="dir-short" style="display:none;"></button>
                     <button id="close-position-btn" style="display:none;"></button>
@@ -1052,6 +995,7 @@
                     </div>
                     <div class="available-funds">可用资金: <span id="fut-cash">10000.00</span></div>
                     <button id="fut-open-btn" class="open-btn" style="width:100%;margin-top:4px;">开多合约</button>
+                    <button id="one-click-close-btn" class="open-btn" style="width:100%;background:#ff5252;margin-top:6px;">一键平仓（全部期货）</button>
                     <div id="fut-list" style="display:none;"></div>
                 </div>
 
@@ -1072,26 +1016,31 @@
 <div class="page" id="page-asset">
     <!-- 新设计的资产卡片，采用2x2网格 -->
     <div class="card" style="padding: 20px;">
-        <div class="asset-grid">
-            <!-- 左上：总资产 -->
-            <div class="asset-item top-left">
-                <div class="asset-label">总资产 ></div>
-                <div class="asset-amount" id="total-asset">10000.00</div>
+        <div style="display:flex;gap:0;align-items:stretch;">
+            <!-- 左侧：总资产 + 持仓盈亏 -->
+            <div style="flex:1;display:flex;flex-direction:column;gap:14px;">
+                <div>
+                    <div class="asset-label">总资产 ></div>
+                    <div class="asset-amount" id="total-asset">10000.00</div>
+                </div>
+                <div>
+                    <div class="asset-label">持仓盈亏</div>
+                    <div class="asset-amount" id="position-profit">0.00</div>
+                </div>
             </div>
-            <!-- 右上：当时盈亏（一小时） -->
-            <div class="asset-item top-right">
-                <div class="asset-label">当前盈亏</div>
-                <div class="asset-amount" id="hourly-profit">0.00</div>
-            </div>
-            <!-- 左下：持仓盈亏 -->
-            <div class="asset-item bottom-left">
-                <div class="asset-label">持仓盈亏</div>
-                <div class="asset-amount" id="position-profit">0.00</div>
-            </div>
-            <!-- 右下：可用余额 -->
-            <div class="asset-item bottom-right">
-                <div class="asset-label">可用余额</div>
-                <div class="asset-amount" id="available-balance">10000.00</div>
+            <!-- 分隔线 -->
+            <div style="width:1px;background:#f0f0f0;margin:0 14px;"></div>
+            <!-- 右侧：手续费等级 + 可用余额 -->
+            <div style="flex:0 0 auto;display:flex;flex-direction:column;gap:14px;text-align:right;min-width:90px;">
+                <div>
+                    <div class="asset-label">手续费等级</div>
+                    <div style="font-weight:700;font-size:clamp(15px,4vw,19px);" id="commission-badge">普通</div>
+                    <div style="font-size:clamp(10px,2.6vw,12px);color:#aaa;margin-top:1px;">费率 <span id="commission-rate">1.0%</span></div>
+                </div>
+                <div>
+                    <div class="asset-label">可用余额</div>
+                    <div class="asset-amount" id="available-balance">10000.00</div>
+                </div>
             </div>
         </div>
     </div>
@@ -1114,74 +1063,55 @@
 
     <!-- 主功能网格（初始显示） -->
     <div id="function-main">
-        <!-- 投资工具 分区 -->
-        <div class="fn-section-label">投资工具</div>
+        <!-- 投资理财 分区 -->
+        <div class="fn-section-label">投资理财</div>
         <div class="fn-row fn-row-2">
             <div class="fn-card fn-card-wide" data-function="property">
                 <div class="fn-icon">🏠</div>
                 <div class="fn-name">房产投资</div>
                 <div class="fn-desc">买房收租 / 分期购置</div>
             </div>
+            <div class="fn-card fn-card-wide" data-function="fund">
+                <div class="fn-icon">📈</div>
+                <div class="fn-name">基金</div>
+                <div class="fn-desc">商业基金 · 公益捐赠</div>
+            </div>
+        </div>
+        <div class="fn-row fn-row-2">
+            <div class="fn-card fn-card-wide" data-function="loan"><div class="fn-icon">🏦</div><div class="fn-name">银行贷款</div><div class="fn-desc">借钱放大仓位</div></div>
+            <div class="fn-card fn-card-wide" data-function="ipo" id="ipo-fn-card"><div class="fn-icon">🚀</div><div class="fn-name">IPO申购</div><div class="fn-desc" id="ipo-fn-desc">暂无新股发行</div></div>
+        </div>
+
+        <!-- 风险管理 分区 -->
+        <div class="fn-section-label">风险管理</div>
+        <div class="fn-row fn-row-2">
             <div class="fn-card fn-card-wide" data-function="sl">
                 <div class="fn-icon">🎯</div>
                 <div class="fn-name">止盈止损</div>
-                <div class="fn-desc">自动触发平仓保护</div>
+                <div class="fn-desc">全仓自动触发平仓</div>
+            </div>
+            <div class="fn-card fn-card-wide" data-function="vip">
+                <div class="fn-icon">👑</div>
+                <div class="fn-name">贵宾服务</div>
+                <div class="fn-desc">银行VIP · 专属福利</div>
             </div>
         </div>
 
         <!-- 娱乐玩法 分区 -->
         <div class="fn-section-label">娱乐玩法</div>
-        <div class="fn-row fn-row-3">
-            <div class="fn-card" data-function="gamble"><div class="fn-icon">🎲</div><div class="fn-name">赌石</div><div class="fn-desc">开石得宝</div></div>
-            <div class="fn-card" data-function="warehouse"><div class="fn-icon">📦</div><div class="fn-name">仓库</div><div class="fn-desc">物品存放</div></div>
-            <div class="fn-card" data-function="achievement"><div class="fn-icon">🏆</div><div class="fn-name">成就</div><div class="fn-desc">解锁挑战</div></div>
-        </div>
-        <div class="fn-row fn-row-1">
-            <div class="fn-card fn-card-wide" data-function="auction"><div class="fn-icon">🔨</div><div class="fn-name">拍卖行</div><div class="fn-desc">竞拍稀有物品</div></div>
-        </div>
-
-        <!-- 市场事件 分区 -->
-        <div class="fn-section-label">市场事件</div>
-        <div class="fn-row fn-row-2">
-            <div class="fn-card fn-card-wide" data-function="news">
-                <div class="fn-icon">📰</div>
-                <div class="fn-name">市场新闻</div>
-                <div class="fn-desc">突发事件 / 黑天鹅</div>
-            </div>
-        </div>
-
-        <!-- 高级玩法 分区 -->
-        <div class="fn-section-label">高级玩法</div>
-        <div class="fn-row fn-row-2">
-            <div class="fn-card fn-card-wide" data-function="loan"><div class="fn-icon">🏦</div><div class="fn-name">银行贷款</div><div class="fn-desc">借钱放大仓位，计息还款</div></div>
-            <div class="fn-card fn-card-wide" data-function="npc"><div class="fn-icon">🤖</div><div class="fn-name">NPC对手</div><div class="fn-desc">跟单/反向 · 限时排行</div></div>
-        </div>
-        <div class="fn-row fn-row-2">
-            <div class="fn-card fn-card-wide" data-function="fund"><div class="fn-icon">📈</div><div class="fn-name">基金</div><div class="fn-desc">商业基金 · 公益捐赠</div></div>
-            <div class="fn-card fn-card-wide" data-function="vip"><div class="fn-icon">👑</div><div class="fn-name">贵宾服务</div><div class="fn-desc">银行VIP · 专属福利</div></div>
-        </div>
-        <div class="fn-row fn-row-1">
-            <div class="fn-card fn-card-wide" data-function="ipo" id="ipo-fn-card"><div class="fn-icon">🚀</div><div class="fn-name">IPO申购</div><div class="fn-desc" id="ipo-fn-desc">暂无新股发行</div></div>
+        <div class="fn-row fn-row-4" style="grid-template-columns:1fr 1fr 1fr 1fr;">
+            <div class="fn-card" data-function="gamble"><div class="fn-icon">🎲</div><div class="fn-name">赌石</div></div>
+            <div class="fn-card" data-function="warehouse"><div class="fn-icon">📦</div><div class="fn-name">仓库</div></div>
+            <div class="fn-card" data-function="achievement"><div class="fn-icon">🏆</div><div class="fn-name">成就</div></div>
+            <div class="fn-card" data-function="auction"><div class="fn-icon">🔨</div><div class="fn-name">拍卖行</div></div>
         </div>
 
         <!-- 账户管理 分区 -->
         <div class="fn-section-label">账户管理</div>
         <div class="fn-row fn-row-3">
-            <div class="fn-card" data-function="redeem">
-                <div class="fn-icon">🎁</div>
-                <div class="fn-name">兑换码</div>
-                <div class="fn-desc">输入领奖励</div>
-            </div>
-            <div class="fn-card" data-function="leaderboard">
-                <div class="fn-icon">📊</div>
-                <div class="fn-name">历史峰值</div>
-                <div class="fn-desc">我的最佳记录</div>
-            </div>
-            <div class="fn-card" data-function="settings">
-                <div class="fn-icon">⚙️</div>
-                <div class="fn-name">设置</div>
-                <div class="fn-desc">存档 / 读档</div>
-            </div>
+            <div class="fn-card" data-function="redeem"><div class="fn-icon">🎁</div><div class="fn-name">兑换码</div><div class="fn-desc">输入领奖励</div></div>
+            <div class="fn-card" data-function="leaderboard"><div class="fn-icon">📊</div><div class="fn-name">历史峰值</div><div class="fn-desc">最佳记录</div></div>
+            <div class="fn-card" data-function="settings"><div class="fn-icon">⚙️</div><div class="fn-name">设置</div><div class="fn-desc">存档 / 读档</div></div>
         </div>
     </div>
 
@@ -1317,9 +1247,8 @@
         <div style="padding: 0 16px 16px;">
             <div class="card" style="margin:0 0 12px;">
                 <div class="card-title">设置条件单</div>
-                <div style="margin-bottom:10px;">
-                    <div style="font-size:clamp(12px,3.2vw,14px); color:#666; margin-bottom:6px;">选择持仓</div>
-                    <select id="sl-position-select" style="width:100%;padding:10px;border-radius:8px;border:1px solid #e0e0e0;font-size:clamp(13px,3.5vw,15px);background:#f7f8fa;color:#333;outline:none;"></select>
+                <div style="margin-bottom:6px;padding:8px 10px;background:#f7f8fa;border-radius:8px;">
+                    <span style="font-size:clamp(11px,3vw,13px);color:#888;">📌 条件单将自动应用到所有持仓</span>
                 </div>
                 <div style="margin-bottom:12px;">
                     <!-- 止盈滑动条 -->
@@ -1402,29 +1331,6 @@
         </div>
     </div>
 
-    <!-- 市场新闻子界面 -->
-    <div id="news-subpage" class="sub-page" style="display:none;">
-        <div class="sub-header">
-            <button id="back-to-functions-news" class="back-btn">← 返回</button>
-            <span class="sub-title">📰 市场新闻</span>
-        </div>
-        <div style="padding:0 16px 16px;">
-            <div class="card" style="margin:0 0 12px;">
-                <div class="card-title">最新头条</div>
-                <div id="news-latest" style="color:#999;text-align:center;padding:16px;font-size:clamp(12px,3.2vw,14px);">等待市场消息…</div>
-            </div>
-            <div class="card" style="margin:0 0 12px;">
-                <div class="card-title" style="margin-bottom:8px;">手动触发事件</div>
-                <div style="font-size:clamp(11px,3vw,13px);color:#999;margin-bottom:12px;">消耗 ¥5,000 触发随机市场事件（冷却60秒）</div>
-                <button id="trigger-news-btn" class="btn btn-primary" style="width:100%;padding:12px;font-size:clamp(13px,3.8vw,15px);">💥 触发随机事件 (-¥5,000)</button>
-                <div id="news-trigger-msg" style="margin-top:10px;font-size:clamp(12px,3.2vw,14px);min-height:18px;"></div>
-            </div>
-            <div class="card" style="margin:0;">
-                <div class="card-title">历史事件</div>
-                <div id="news-history-list"><div style="color:#999;text-align:center;padding:16px;font-size:clamp(12px,3.2vw,14px);">暂无历史事件</div></div>
-            </div>
-        </div>
-    </div>
 
     <!-- 内幕消息子界面 -->
 
@@ -1487,28 +1393,6 @@
         </div>
     </div>
 
-    <!-- NPC对手子界面 -->
-    <div id="npc-subpage" class="sub-page" style="display:none;">
-        <div class="sub-header">
-            <button id="back-to-functions-npc" class="back-btn">← 返回</button>
-            <span class="sub-title">🤖 NPC对手</span>
-        </div>
-        <div style="padding:0 16px 16px;">
-            <!-- 限时排行榜 -->
-            <div class="card" style="margin:0 0 12px;">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-                    <div class="card-title" style="margin:0;">限时排行榜</div>
-                    <div id="npc-timer" style="font-size:clamp(14px,4vw,17px);font-weight:700;color:#4285f4;">30:00</div>
-                </div>
-                <div id="npc-leaderboard"></div>
-            </div>
-            <!-- NPC列表 -->
-            <div class="card" style="margin:0;">
-                <div class="card-title">场上玩家</div>
-                <div id="npc-list"></div>
-            </div>
-        </div>
-    </div>
 
 </div>
 <div class="bottom-nav">
@@ -1561,6 +1445,8 @@
         let fundPositions = {};
         let charityTotal = 0;
         let vipAppleTimer = 0;
+        let totalTradingVolume = 0;  // 累计买入交易额（不含杠杆）
+        let totalCommissionPaid = 0; // 累计已缴手续费
         let auctionState = {};
         function addToWarehouse(name, qty, sellPrice, icon) {
             icon = icon || '📦';
@@ -1571,8 +1457,6 @@
         }
 
         // 一小时历史总资产数组（720个点，每5秒一个，正好1小时）
-        const HOUR_CYCLES = 720;
-        let hourlyProfitHistory = [];
 
         // 游戏主状态
         let game = {
@@ -1581,7 +1465,7 @@
             stocks: JSON.parse(JSON.stringify(stockList)), // 股票数据（深拷贝）
             positions: [],               // 持仓数组，每个对象包含id, code, direction, quantity, openPrice, leverage
             history: [],                 // 交易历史记录
-            profitHistory: [10000],      // 总资产历史（用于图表，最多20个点）
+            profitHistory: [10000],      // 总资产历史（用于图表）
             posHistory: [],              // 当前股票价格历史（用于持仓走势图）
             candleData: {                 // K线数据，按股票代码存储
                 X001: [],
@@ -1597,7 +1481,6 @@
         };
 
         // 初始化一小时历史
-        hourlyProfitHistory.push(10000);
 
         // ==================== 工具函数：生成初始K线 ====================
         function generateInitialCandles(basePrice, code) {
@@ -1666,7 +1549,6 @@
 
         // 资产页面新元素
         const totalAssetEl = document.getElementById("total-asset");
-        const hourlyProfitEl = document.getElementById("hourly-profit");
         const positionProfitEl = document.getElementById("position-profit");
         const availableBalanceEl = document.getElementById("available-balance");
 
@@ -1689,15 +1571,13 @@
         const achievementSubpage = document.getElementById('achievement-subpage');
         const leaderboardSubpage = document.getElementById('leaderboard-subpage');
         // 新功能元素
-        const newsSubpage = document.getElementById('news-subpage');
         const ipoSubpage = document.getElementById('ipo-subpage');
         const loanSubpage = document.getElementById('loan-subpage');
-        const npcSubpage = document.getElementById('npc-subpage');
 
         const ALL_SUBPAGES = [
             propertySubpage, redeemSubpage, warehouseSubpage, gambleSubpage,
             slSubpage, achievementSubpage, leaderboardSubpage,
-            newsSubpage, ipoSubpage, loanSubpage, npcSubpage
+            ipoSubpage, loanSubpage
         ];
 
         function showFunctionMain() {
@@ -1814,13 +1694,15 @@
             if (isNaN(qty) || qty <= 0) { alert('请输入有效股数'); return; }
             // 只保留买入
             const cost = qty * stock.price;
-            if (cost > game.cash) { alert('可用资金不足'); return; }
+            const feePreview = parseFloat((cost * getCommissionRate()).toFixed(2));
+            if (cost + feePreview > game.cash) { alert('可用资金不足（含手续费 ¥' + feePreview + '）'); return; }
             game.cash -= cost;
+            const fee = applyCommission(cost);
             const posId = Date.now() + '-' + Math.random().toString(36).substr(2, 8);
             game.positions.push({ id: posId, code: stock.code, direction: 'long', quantity: qty, openPrice: stock.price, leverage: 1 });
-                game.history.push({ name: stock.name, type: '买入', num: qty, price: stock.price.toFixed(2), time: new Date().toLocaleTimeString(), leverage: 1, pl: null });
+                game.history.push({ name: stock.name, type: '买入', num: qty, price: stock.price.toFixed(2), time: new Date().toLocaleTimeString(), leverage: 1, pl: null, fee: fee.toFixed(2) });
                 updateAll(); renderPosition(); renderTradeHistory();
-                alert('买入成功！' + stock.name + ' x' + qty + ' @¥' + stock.price.toFixed(2) + '，花费 ¥' + cost.toFixed(2));
+                alert('买入成功！' + stock.name + ' x' + qty + ' @¥' + stock.price.toFixed(2) + '，花费 ¥' + cost.toFixed(2) + '，手续费 ¥' + fee.toFixed(2));
         });
         // closeBtn unused - sell via position page
         const _closeBtnDummy = document.getElementById('close-position-btn');
@@ -1931,13 +1813,11 @@
                 } else if (func === 'leaderboard') {
                     showSubpage(leaderboardSubpage); renderLeaderboard();
                 } else if (func === 'news') {
-                    showSubpage(newsSubpage); renderNewsPage();
                 } else if (func === 'ipo') {
                     showSubpage(ipoSubpage); renderIPOPage();
                 } else if (func === 'loan') {
                     showSubpage(loanSubpage); renderLoanPage();
                 } else if (func === 'npc') {
-                    showSubpage(npcSubpage); renderNpcPage();
                 } else if (func === 'settings') {
                     showSubpage(settingsSubpage);
                 } else if (func === 'ranking') {
@@ -1960,10 +1840,8 @@
         document.getElementById('back-to-functions-sl').addEventListener('click', () => showFunctionMain());
         document.getElementById('back-to-functions-achievement').addEventListener('click', () => showFunctionMain());
         document.getElementById('back-to-functions-leaderboard').addEventListener('click', () => showFunctionMain());
-        document.getElementById('back-to-functions-news').addEventListener('click', () => showFunctionMain());
         document.getElementById('back-to-functions-ipo').addEventListener('click', () => showFunctionMain());
         document.getElementById('back-to-functions-loan').addEventListener('click', () => showFunctionMain());
-        document.getElementById('back-to-functions-npc').addEventListener('click', () => showFunctionMain());
 
         // ==================== 兑换码功能 ====================
         redeemButton.addEventListener('click', () => {
@@ -2103,21 +1981,15 @@
             availableBalanceEl.textContent = fmtAsset(game.cash);
 
             // 计算当时盈亏（一小时）
-            let hourlyProfit = 0;
-            if (hourlyProfitHistory.length > 0) {
-                const first = hourlyProfitHistory[0];
-                hourlyProfit = totalAsset - first;
-            }
-            hourlyProfitEl.textContent = (hourlyProfit >= 0 ? '+' : '') + fmtAsset(hourlyProfit);
             // 根据正负设置颜色
-            hourlyProfitEl.className = 'asset-amount'; hourlyProfitEl.style.color = '#4285f4';
             positionProfitEl.className = 'asset-amount ' + (floatingPL >= 0 ? 'up' : 'down');
-            availableBalanceEl.className = 'asset-amount up'; // 可用余额始终为正，用绿色
+            availableBalanceEl.className = 'asset-amount ' + (game.cash >= 0 ? 'up' : 'down');
 
             // 更新交易页面可用资金
             availableFundsEl.textContent = fmtAsset(game.cash);
 
             checkLiquidation();
+            updateCommissionBadge();
         }
 
         // ==================== 渲染持仓列表 ====================
@@ -2136,8 +2008,7 @@
                 const dirColor = p.direction === "long" ? "#00c48c" : "#ff5252";
                 const dirText = p.direction === "long" ? "多" : "空";
                 let tag = '';
-                if (p.isNpc) tag = '<span style="background:#9c27b0;color:#fff;border-radius:4px;padding:1px 5px;font-size:11px;margin-left:4px;">跟单</span>';
-                else if (p.isFutures) tag = '<span style="background:#ff9800;color:#fff;border-radius:4px;padding:1px 5px;font-size:11px;margin-left:4px;">期货</span>';
+                if (p.isFutures) tag = '<span style="background:#ff9800;color:#fff;border-radius:4px;padding:1px 5px;font-size:11px;margin-left:4px;">期货</span>';
                 else if (p.isLimit) tag = '<span style="background:#4285f4;color:#fff;border-radius:4px;padding:1px 5px;font-size:11px;margin-left:4px;">限价</span>';
                 else if (p.leverage === 1 && p.direction === "long") tag = '<span style="background:#00c48c;color:#fff;border-radius:4px;padding:1px 5px;font-size:11px;margin-left:4px;">现货</span>';
                 else tag = '<span style="background:#607d8b;color:#fff;border-radius:4px;padding:1px 5px;font-size:11px;margin-left:4px;">合约</span>';
@@ -2153,7 +2024,7 @@
                     + '<div class="history-row"><div style="display:flex;align-items:center;flex-wrap:wrap;gap:2px;"><span style="font-weight:700;">' + stock.name + '</span><span style="color:' + dirColor + ';font-weight:600;margin-left:2px;">' + dirText + '</span>' + tag + '</div><div style="color:#888;">x' + p.quantity + '</div></div>'
                     + '<div class="history-row" style="margin-top:4px;"><div>开仓价：<span style="font-weight:600;">' + p.openPrice.toFixed(2) + '</span></div><div>浮盈：<span style="font-weight:700;color:' + (pl >= 0 ? '#00c48c' : '#ff5252') + '">' + (pl >= 0 ? '+' : '') + pl.toFixed(2) + '</span></div></div>'
                     + liqHtml
-                    + '<button class="single-close-btn" data-id="' + p.id + '" style="margin-top:8px;">平仓</button>'
+                    + '<button class="single-close-btn" data-id="' + p.id + '" style="margin-top:8px;">' + ((!p.isFutures && p.leverage===1 && p.direction==='long') ? '卖出' : '平仓') + '</button>'
                     + '</div>';
             });
             positionListEl.innerHTML = html;
@@ -2189,6 +2060,7 @@
                     plHtml = `<span class="${plColor}">盈亏: ${h.pl}</span>`;
                 }
 
+                const feeHtml = h.fee && parseFloat(h.fee) > 0 ? `<span style="color:#aaa;font-size:11px;">手续费 ¥${h.fee}</span>` : '';
                 html += `
                 <div class="history-item">
                     <div class="history-row">
@@ -2200,7 +2072,7 @@
                         <div>${h.num}股 × ${h.price} (${h.leverage || ''}x) ${h.reason ? ' ' + h.reason : ''}</div>
                     </div>
                     <div class="history-row">
-                        ${plHtml}
+                        ${plHtml}${plHtml && feeHtml ? '&nbsp;&nbsp;' : ''}${feeHtml}
                     </div>
                 </div>
                 `;
@@ -2390,10 +2262,57 @@
         }
 
         // ==================== 格式化辅助 ====================
+
+        function profitHistoryPush() {
+            let fl = 0;
+            game.positions.forEach(p => {
+                const s = game.stocks.find(x => x.code === p.code);
+                if (s) fl += p.direction==='long' ? (s.price-p.openPrice)*p.quantity : (p.openPrice-s.price)*p.quantity;
+            });
+            const ta = game.cash + fl;
+            game.profitHistory.push(ta);
+            if (game.profitHistory.length > 100) game.profitHistory.shift();
+        }
         function fmtAsset(v) {
             if (v >= 1e8) return (v/1e8).toFixed(4) + '亿';
             if (Math.abs(v) >= 1e4) return (v/1e4).toFixed(2) + '万';
             return v.toFixed(2);
+        }
+
+        // ==================== 手续费系统 ====================
+        function getCommissionRate() {
+            // 基础档位
+            let rate;
+            if (totalTradingVolume >= 1e8)      rate = 0.003;  // VIP3: 0.3%
+            else if (totalTradingVolume >= 1e7) rate = 0.005;  // VIP2: 0.5%
+            else if (totalTradingVolume >= 1e6) rate = 0.007;  // VIP1: 0.7%
+            else                                rate = 0.010;  // 普通: 1.0%
+            // 贵宾服务减免
+            if (ownedProperties['villa']) rate = Math.max(0.001, rate - 0.002);
+            return rate;
+        }
+        function getCommissionTier() {
+            const hasVip = ownedProperties['villa'];
+            if (totalTradingVolume >= 1e8) return { label: 'VIP3', color: '#9c27b0', rate: getCommissionRate() };
+            if (totalTradingVolume >= 1e7) return { label: 'VIP2', color: '#e53935', rate: getCommissionRate() };
+            if (totalTradingVolume >= 1e6) return { label: 'VIP1', color: '#ff9800', rate: getCommissionRate() };
+            return { label: hasVip ? '贵宾' : '普通', color: hasVip ? '#4285f4' : '#aaa', rate: getCommissionRate() };
+        }
+        function applyCommission(buyNotional) {
+            const fee = parseFloat((buyNotional * getCommissionRate()).toFixed(2));
+            game.cash -= fee;
+            totalTradingVolume += buyNotional;
+            totalCommissionPaid += fee;
+            return fee;
+        }
+        function updateCommissionBadge() {
+            const t = getCommissionTier();
+            const el = document.getElementById('commission-badge');
+            if (!el) return;
+            el.textContent = t.label;
+            el.style.color = t.color;
+            const rateEl = document.getElementById('commission-rate');
+            if (rateEl) rateEl.textContent = (t.rate * 100).toFixed(1) + '%';
         }
 
         // ==================== 更新K线图 ====================
@@ -2899,100 +2818,6 @@
             alert(`开石 ${qty} 个，总收益: ${totalProfit.toFixed(2)} 元`);
         };
 
-        // ==================== 市场新闻 / 黑天鹅事件 ====================
-        const NEWS_EVENTS = [
-            { tag:'bull', label:'利好', text:'【稀土】政府宣布扩大稀土储备，稀土板块受益',      code:'J002', impact: 0.12 },
-            { tag:'bull', label:'利好', text:'【石油】中东协议达成，石油供应稳定预期提升',       code:'X001', impact: 0.08 },
-            { tag:'bull', label:'利好', text:'【科创】国家科技基金重点扶持科创板块',             code:'R004', impact: 0.15 },
-            { tag:'bull', label:'利好', text:'【电力】绿能政策落地，电力板块全面上涨',           code:'K003', impact: 0.10 },
-            { tag:'bull', label:'利好', text:'【粮油】国际粮价上涨带动粮油板块走强',             code:'X005', impact: 0.09 },
-            { tag:'bear', label:'利空', text:'【稀土】主要出口国宣布限制出口，稀土大跌',         code:'J002', impact:-0.14 },
-            { tag:'bear', label:'利空', text:'【石油】OPEC意外增产，油价暴跌',                  code:'X001', impact:-0.11 },
-            { tag:'bear', label:'利空', text:'【科创】监管突击检查科技公司，科创板暴跌',          code:'R004', impact:-0.16 },
-            { tag:'bear', label:'利空', text:'【电力】电网事故引发停电危机，电力板块重挫',        code:'K003', impact:-0.13 },
-            { tag:'bear', label:'利空', text:'【粮油】粮油掺假丑闻曝光，板块信任危机',           code:'X005', impact:-0.10 },
-            { tag:'swan', label:'黑天鹅', text:'【全市场】突发金融危机！所有股票熔断暴跌',       code:'ALL',  impact:-0.20 },
-            { tag:'swan', label:'黑天鹅', text:'【全市场】央行意外降息500BP！市场全线飙涨',      code:'ALL',  impact: 0.18 },
-            { tag:'swan', label:'黑天鹅', text:'【科创】某科技巨头宣布私有化退市，科创暴拉',     code:'R004', impact: 0.35 },
-            { tag:'swan', label:'黑天鹅', text:'【石油】地缘冲突爆发，石油期货一夜翻倍',         code:'X001', impact: 0.40 },
-        ];
-        let newsHistory = [];
-        let newsTriggerCooldown = 0;
-        let latestNews = null;
-
-        function applyNewsEvent(event) {
-            // 新闻立刻显示，10秒后才触发股价变动
-            const entry = { ...event, time: new Date().toLocaleTimeString(), pending: true };
-            newsHistory.unshift(entry);
-            if (newsHistory.length > 20) newsHistory.pop();
-            latestNews = entry;
-            if (newsSubpage && newsSubpage.style.display !== 'none') renderNewsPage();
-            fireDanmu(entry.text, entry.tag);
-            updateAll();
-            setTimeout(() => {
-                if (event.code === 'ALL') {
-                    game.stocks.forEach(s => { s.price = Math.max(0.5, s.price * (1 + event.impact)); });
-                } else {
-                    const s = game.stocks.find(x => x.code === event.code);
-                    if (s) s.price = Math.max(0.5, s.price * (1 + event.impact));
-                }
-                entry.pending = false;
-                if (newsSubpage && newsSubpage.style.display !== 'none') renderNewsPage();
-                updateAll();
-            }, 10000);
-        }
-
-        function renderNewsPage() {
-            const latestEl = document.getElementById('news-latest');
-            const historyEl = document.getElementById('news-history-list');
-            if (latestNews) {
-                const cls = latestNews.tag === 'bull' ? 'news-tag-bull' : latestNews.tag === 'bear' ? 'news-tag-bear' : 'news-tag-swan';
-                const pendingTip = latestNews.pending ? '<span style="color:#ff9800;font-size:12px;"> ⏳ 10秒后股价变动</span>' : '';
-                latestEl.innerHTML = `<span class="news-tag ${cls}">${latestNews.label}</span><span style="font-size:clamp(13px,3.5vw,15px);color:#222;">${latestNews.text}</span>${pendingTip}<div style="margin-top:6px;font-size:clamp(11px,3vw,13px);color:#999;">${latestNews.time} · 影响 ${latestNews.impact > 0 ? '+' : ''}${(latestNews.impact*100).toFixed(0)}%</div>`;
-            }
-            if (newsHistory.length === 0) {
-                historyEl.innerHTML = '<div style="color:#999;text-align:center;padding:16px;font-size:clamp(12px,3.2vw,14px);">暂无历史事件</div>';
-            } else {
-                historyEl.innerHTML = newsHistory.map(n => {
-                    const cls = n.tag === 'bull' ? 'news-tag-bull' : n.tag === 'bear' ? 'news-tag-bear' : 'news-tag-swan';
-                    const pendingBadge = n.pending ? '<span style="color:#ff9800;font-size:11px;margin-left:6px;">⏳ 10秒后生效</span>' : '';
-                    return `<div class="news-item"><span class="news-tag ${cls}">${n.label}</span><span style="font-size:clamp(12px,3.2vw,14px);color:#333;">${n.text}</span>${pendingBadge}<div style="margin-top:4px;font-size:clamp(11px,3vw,12px);color:#999;">${n.time} · ${n.impact>0?'+':''}${(n.impact*100).toFixed(0)}%</div></div>`;
-                }).join('');
-            }
-        }
-
-        document.getElementById('trigger-news-btn').addEventListener('click', () => {
-            const cost = 5000;
-            const msgEl = document.getElementById('news-trigger-msg');
-            const btn = document.getElementById('trigger-news-btn');
-            const now = Date.now();
-            if (now < newsTriggerCooldown) {
-                msgEl.textContent = `冷却中，请等待 ${Math.ceil((newsTriggerCooldown - now)/1000)} 秒`;
-                msgEl.style.color = '#999';
-                return;
-            }
-            if (game.cash < cost) { msgEl.textContent = '现金不足 ¥5,000'; msgEl.style.color = '#ff5252'; return; }
-            game.cash -= cost;
-            const event = NEWS_EVENTS[Math.floor(Math.random() * NEWS_EVENTS.length)];
-            applyNewsEvent(event);
-            newsTriggerCooldown = Date.now() + 60000;
-            msgEl.textContent = `事件触发：${event.text}`;
-            msgEl.style.color = event.impact > 0 ? '#00c48c' : '#ff5252';
-            renderNewsPage();
-            btn.disabled = true;
-            setTimeout(() => { btn.disabled = false; msgEl.textContent = ''; }, 60000);
-        });
-
-        // 自动随机触发新闻（每90秒有30%概率）
-        setInterval(() => {
-            if (Math.random() < 0.3) {
-                const event = NEWS_EVENTS[Math.floor(Math.random() * NEWS_EVENTS.length)];
-                applyNewsEvent(event);
-                // 如果当前在新闻页面则刷新
-                if (newsSubpage.style.display !== 'none') renderNewsPage();
-            }
-        }, 90000);
-
 
         // ==================== IPO新股申购 ====================
         const IPO_STOCK_NAMES = [
@@ -3069,7 +2894,6 @@
             // Add news
             const ev = { tag:'bull', label:'IPO', text:`【IPO】${name}(${code}) 发行价¥${issuePrice}，限时${IPO_DURATION}秒申购！`, time:new Date().toLocaleTimeString(), impact:0 };
             newsHistory.unshift(ev); if(newsHistory.length>30) newsHistory.pop(); latestNews=ev;
-            if (newsSubpage && newsSubpage.style.display !== 'none') renderNewsPage();
             if (ipoSubpage && ipoSubpage.style.display !== 'none') renderIPOPage();
             updateAll();
         }
@@ -3132,9 +2956,9 @@
                 newsHistory.unshift(ev); if(newsHistory.length>30) newsHistory.pop(); latestNews=ev;
             }
 
+            ipoNextIn = IPO_INTERVAL; // 重置5分钟倒计时（从发行/未中签后开始）
             updateAsset();
             renderStockList();
-            if (newsSubpage && newsSubpage.style.display !== 'none') renderNewsPage();
             if (ipoSubpage && ipoSubpage.style.display !== 'none') renderIPOPage();
             updateAll();
         }
@@ -3142,26 +2966,24 @@
         function triggerIPOVolatility(code, name) {
             const stock = game.stocks.find(s => s.code === code);
             if (!stock) return;
-            const boom = Math.random() < 0.5;
+            const boom = Math.random() < 0.8; // 80%概率上涨
+            const changePct = (0.01 + Math.random() * 0.09); // 1%~10%幅度
             let newPrice;
             if (boom) {
-                const mult = 10 + Math.random() * 40; // ×10 ~ ×50
-                newPrice = stock.price * mult;
-                const ev = { tag:'bull', label:'IPO暴涨', text:`🚀 ${name} 上市暴涨！股价涨至 ¥${newPrice.toFixed(2)} (×${mult.toFixed(1)})`, time:new Date().toLocaleTimeString(), impact: mult - 1 };
+                newPrice = stock.price * (1 + changePct);
+                const pct = (changePct * 100).toFixed(1);
+                const ev = { tag:'bull', label:'IPO上涨', text:`📈 ${name} 上市首日涨幅 +${pct}%，股价 ¥${newPrice.toFixed(2)}`, time:new Date().toLocaleTimeString(), impact: changePct };
                 newsHistory.unshift(ev); if(newsHistory.length>30) newsHistory.pop(); latestNews=ev;
+                fireDanmu(ev.text, 'bull');
             } else {
-                const drop = 0.1 + Math.random() * 0.1; // -10% ~ -20%... wait spec says x10-x20 drop? Let me re-read
-                // Spec: 破发几率50%（股价减x10-x20）-> I interpret as drop by factor, price / 10~20
-                const divider = 10 + Math.random() * 10;
-                newPrice = Math.max(0.5, stock.price / divider);
-                const dropPct = ((1 - newPrice / stock.price) * 100).toFixed(0);
-                const ev = { tag:'bear', label:'IPO破发', text:`📉 ${name} 上市破发！股价跌至 ¥${newPrice.toFixed(2)} (-${dropPct}%)`, time:new Date().toLocaleTimeString(), impact: newPrice/stock.price - 1 };
+                newPrice = Math.max(0.5, stock.price * (1 - changePct));
+                const pct = (changePct * 100).toFixed(1);
+                const ev = { tag:'bear', label:'IPO破发', text:`📉 ${name} 上市首日下跌 -${pct}%，股价 ¥${newPrice.toFixed(2)}`, time:new Date().toLocaleTimeString(), impact: -changePct };
                 newsHistory.unshift(ev); if(newsHistory.length>30) newsHistory.pop(); latestNews=ev;
+                fireDanmu(ev.text, 'bear');
             }
             stock.price = Math.max(0.5, newPrice);
-            // Generate new candle data from new price
             game.candleData[code] = generateInitialCandles(stock.price, code);
-            if (newsSubpage && newsSubpage.style.display !== 'none') renderNewsPage();
             renderStockList();
             updateAll();
         }
@@ -3195,9 +3017,12 @@
                 ipoNextIn = IPO_INTERVAL;
             }
 
-            // 1% chance listed IPO stock delists (per tick = per second)
+            // IPO股退市：随机触发 OR 价格跌破1元
             ipoListedStocks.forEach(code => {
-                if (Math.random() < 0.001) { // ~0.1%/s ≈ 1%/10s
+                const stockCheck = game.stocks.find(s => s.code === code);
+                const forceDelist = stockCheck && stockCheck.price < 1;
+                if (!forceDelist && Math.random() >= 0.001) return;
+                if (true) { // delist
                     const stock = game.stocks.find(s => s.code === code);
                     if (!stock) return;
                     const ev = { tag:'bear', label:'退市', text:`⚠️ 【退市公告】${stock.name}(${code}) 因经营问题被强制退市，持仓清零！`, time:new Date().toLocaleTimeString(), impact: -1 };
@@ -3212,8 +3037,7 @@
                     }
                     renderStockList();
                     renderPosition();
-                    if (newsSubpage && newsSubpage.style.display !== 'none') renderNewsPage();
-                    updateAll();
+                            updateAll();
                 }
             });
         }
@@ -3416,166 +3240,23 @@
             if (loanSubpage.style.display !== 'none') renderLoanPage();
         }
 
-        // ==================== NPC对手 / 排行榜 ====================
-        const NPC_PROFILES = [
-            { name:'价值猎人王', emoji:'🦁', style:'trend',   aggressiveness:0.95 },
-            { name:'量化小明',   emoji:'🤖', style:'quant',   aggressiveness:1.0 },
-            { name:'散户老李',   emoji:'😤', style:'random',  aggressiveness:0.9 },
-            { name:'基金经理赵', emoji:'💼', style:'steady',  aggressiveness:0.85 },
-        ];
-        let npcs = NPC_PROFILES.map(p => ({ ...p, asset: 10000, positions:[] }));
-        let npcFollowing = {}; // key: npcName, val: 'follow' | 'reverse' | null
-        let npcTimerSeconds = 30 * 60; // 30 minutes
-        let npcTimerInterval = null;
-        let npcRoundStarted = false;
-
-        function npcTick() {
-            npcs.forEach(npc => {
-                if (Math.random() > npc.aggressiveness * 0.8) return; // 随机是否操作
-                const stock = game.stocks[Math.floor(Math.random() * game.stocks.length)];
-                const action = Math.random() > 0.5 ? 'buy' : 'sell';
-                const qty = Math.floor(Math.random() * 5) + 1;
-                if (action === 'buy' && npc.asset >= stock.price * qty) {
-                    npc.asset -= stock.price * qty;
-                    npc.positions.push({ code: stock.code, qty, price: stock.price, dir: 'long' });
-
-                    // 跟单逻辑
-                    if (npcFollowing[npc.name] === 'follow') {
-                        if (game.cash >= stock.price * qty) {
-                            game.cash -= stock.price * qty;
-                            game.positions.push({ id: Date.now()+Math.random(), code:stock.code, direction:'long', quantity:qty, openPrice:stock.price, leverage:1 });
-                        }
-                    } else if (npcFollowing[npc.name] === 'reverse') {
-                        if (game.cash >= stock.price * qty) {
-                            game.cash -= stock.price * qty;
-                            game.positions.push({ id: Date.now()+Math.random(), code:stock.code, direction:'short', quantity:qty, openPrice:stock.price, leverage:1 });
-                        }
-                    }
-                } else if (action === 'sell' && npc.positions.length > 0) {
-                    const pos = npc.positions.pop();
-                    const s = game.stocks.find(x => x.code === pos.code);
-                    if (s) npc.asset += s.price * pos.qty;
-                }
-                // NPC浮动盈亏
-                let fl = 0;
-                npc.positions.forEach(pos => {
-                    const s = game.stocks.find(x => x.code === pos.code);
-                    if (s) fl += (s.price - pos.price) * pos.qty;
-                });
-                npc.displayAsset = npc.asset + fl;
-            });
-            if (npcSubpage.style.display !== 'none') renderNpcPage();
-        }
-
-        function startNpcTimer() {
-            if (npcRoundStarted) return;
-            npcRoundStarted = true;
-            npcTimerSeconds = 30 * 60;
-            npcTimerInterval = setInterval(() => {
-                npcTimerSeconds--;
-                if (npcTimerSeconds <= 0) {
-                    clearInterval(npcTimerInterval);
-                    npcRoundStarted = false;
-                    alert('⏰ 限时赛结束！查看综合>NPC对手 查看最终排名。');
-                }
-                if (npcSubpage.style.display !== 'none') {
-                    const m = String(Math.floor(npcTimerSeconds/60)).padStart(2,'0');
-                    const s = String(npcTimerSeconds%60).padStart(2,'0');
-                    const el = document.getElementById('npc-timer');
-                    if (el) el.textContent = `${m}:${s}`;
-                }
-            }, 1000);
-        }
-
-        function renderNpcPage() {
-            startNpcTimer();
-            const m = String(Math.floor(npcTimerSeconds/60)).padStart(2,'0');
-            const s2 = String(npcTimerSeconds%60).padStart(2,'0');
-            const timerEl = document.getElementById('npc-timer');
-            if (timerEl) timerEl.textContent = `${m}:${s2}`;
-
-            // 排行榜
-            const playerAsset = getTotalAsset();
-            const all = [
-                { name:'我', emoji:'⭐', asset: playerAsset, isPlayer:true },
-                ...npcs.map(n => ({ name:n.name, emoji:n.emoji, asset: n.displayAsset || n.asset, isPlayer:false }))
-            ].sort((a,b) => b.asset - a.asset);
-
-            const lbEl = document.getElementById('npc-leaderboard');
-            if (lbEl) {
-                lbEl.innerHTML = all.map((p, i) => {
-                    const numClass = i===0?'gold':i===1?'silver':i===2?'bronze':p.isPlayer?'player':'';
-                    const assetStr = p.asset >= 10000 ? (p.asset/10000).toFixed(2)+'万' : p.asset.toFixed(0);
-                    return `<div class="npc-rank-item">
-                        <div class="npc-rank-num ${numClass}">${i+1}</div>
-                        <div>${p.emoji} ${p.name}</div>
-                        <div style="margin-left:auto;font-weight:700;color:${p.isPlayer?'#4285f4':'#333'};">¥${assetStr}</div>
-                    </div>`;
-                }).join('');
-            }
-
-            // NPC列表 + 跟单按钮
-            const npcListEl = document.getElementById('npc-list');
-            if (npcListEl) {
-                npcListEl.innerHTML = npcs.map(npc => {
-                    const assetStr = (npc.displayAsset||npc.asset) >= 10000 ? ((npc.displayAsset||npc.asset)/10000).toFixed(2)+'万' : (npc.displayAsset||npc.asset).toFixed(0);
-                    const following = npcFollowing[npc.name];
-                    return `<div style="padding:12px 0;border-bottom:1px solid #f5f5f5;">
-                        <div style="display:flex;align-items:center;margin-bottom:8px;">
-                            <span style="font-size:22px;margin-right:8px;">${npc.emoji}</span>
-                            <div>
-                                <div style="font-weight:700;font-size:clamp(13px,3.5vw,15px);">${npc.name}</div>
-                                <div style="font-size:clamp(11px,3vw,12px);color:#999;">风格：${npc.style==='trend'?'趋势':npc.style==='quant'?'量化':npc.style==='random'?'散户':'稳健'} | 资产 ¥${assetStr}</div>
-                            </div>
-                        </div>
-                        <div style="display:flex;gap:8px;">
-                            <button class="npc-follow-btn ${following==='follow'?'active':''}" onclick="setNpcFollow('${npc.name}','follow')">📈 跟单</button>
-                            <button class="npc-follow-btn reverse ${following==='reverse'?'active':''}" onclick="setNpcFollow('${npc.name}','reverse')">📉 反向</button>
-                            <button class="npc-follow-btn ${following?'':'active'}" style="${following?'':'border-color:#ddd;color:#999;'}" onclick="setNpcFollow('${npc.name}',null)">取消</button>
-                        </div>
-                    </div>`;
-                }).join('');
-            }
-        }
-
-        window.setNpcFollow = function(name, mode) {
-            npcFollowing[name] = mode;
-            renderNpcPage();
-            const label = mode === 'follow' ? '跟单' : mode === 'reverse' ? '反向' : '取消';
-            if (mode) alert(`已设置对 ${name} 的操作：${label}。TA的每笔买入都会自动触发你的同向/反向开仓。`);
-        };
 
         // ==================== 止盈止损功能 ====================
         let slOrders = []; // { positionId, tp, sl, name, direction }
 
         function updateSLSliderBase() {
-            const sel = document.getElementById('sl-position-select');
-            if (!sel || !sel.value) return;
-            const pos = game.positions.find(p => p.id === sel.value);
-            if (!pos) return;
-            const stock = game.stocks.find(s => s.code === pos.code);
-            const basePrice = stock ? stock.price : pos.openPrice;
+            // Base price is current market price (or 100 as fallback)
             const tpSlider = document.getElementById('sl-tp-input');
             const slSlider = document.getElementById('sl-sl-input');
+            const basePrice = game.positions.length > 0 
+                ? (() => { const s = game.stocks.find(x => x.code === game.positions[0].code); return s ? s.price : 100; })()
+                : 100;
             if (tpSlider) { tpSlider.dataset.base = basePrice; tpSlider.value = 0; document.getElementById('sl-tp-label').textContent = '未设置'; tpSlider.dataset.active='0'; }
             if (slSlider) { slSlider.dataset.base = basePrice; slSlider.value = 0; document.getElementById('sl-sl-label').textContent = '未设置'; slSlider.dataset.active='0'; }
         }
 
         function renderSLPositionSelect() {
-            const sel = document.getElementById('sl-position-select');
-            if (!sel) return;
-            if (game.positions.length === 0) {
-                sel.innerHTML = '<option value="">— 暂无持仓 —</option>';
-                return;
-            }
-            sel.innerHTML = game.positions.map(p => {
-                const stock = game.stocks.find(s => s.code === p.code);
-                const name = stock ? stock.name : p.code;
-                const dir = p.direction === 'long' ? '多' : '空';
-                return `<option value="${p.id}">${name} [${dir}] ×${p.quantity} @${p.openPrice.toFixed(2)}</option>`;
-            }).join('');
-            updateSLSliderBase();
-            sel.onchange = updateSLSliderBase;
+            // No select needed - applies to all positions
         }
 
         function renderSLOrders() {
@@ -3607,27 +3288,28 @@
         };
 
         document.getElementById('sl-set-btn').addEventListener('click', () => {
-            const sel = document.getElementById('sl-position-select');
             const tpSlider = document.getElementById('sl-tp-input');
             const slSlider = document.getElementById('sl-sl-input');
-            const posId = sel.value;
-            if (!posId) { alert('请先选择持仓'); return; }
             const tpActive = tpSlider.dataset.active === '1';
             const slActive = slSlider.dataset.active === '1';
             if (!tpActive && !slActive) { alert('请至少拖动止盈或止损滑动条'); return; }
-            const base = parseFloat(tpSlider.dataset.base || 0);
-            const tp = tpActive ? parseFloat((base * (1 + parseInt(tpSlider.value) / 100)).toFixed(2)) : null;
-            const sl = slActive ? parseFloat((base * (1 - parseInt(slSlider.value) / 100)).toFixed(2)) : null;
-            const pos = game.positions.find(p => p.id === posId);
-            if (!pos) { alert('持仓不存在'); return; }
-            const stock = game.stocks.find(s => s.code === pos.code);
-            slOrders = slOrders.filter(o => o.positionId !== posId);
-            slOrders.push({ positionId: posId, tp, sl, name: stock ? stock.name : pos.code, direction: pos.direction });
-            // reset sliders
+            if (game.positions.length === 0) { alert('暂无持仓'); return; }
+            const tpPct = tpActive ? parseInt(tpSlider.value) / 100 : null;
+            const slPct = slActive ? parseInt(slSlider.value) / 100 : null;
+            let count = 0;
+            game.positions.forEach(pos => {
+                const stock = game.stocks.find(s => s.code === pos.code);
+                const basePrice = stock ? stock.price : pos.openPrice;
+                const tp = tpPct !== null ? parseFloat((basePrice * (1 + tpPct)).toFixed(2)) : null;
+                const sl = slPct !== null ? parseFloat((basePrice * (1 - slPct)).toFixed(2)) : null;
+                slOrders = slOrders.filter(o => o.positionId !== pos.id);
+                slOrders.push({ positionId: pos.id, tp, sl, name: stock ? stock.name : pos.code, direction: pos.direction });
+                count++;
+            });
             tpSlider.value = 0; tpSlider.dataset.active = '0'; document.getElementById('sl-tp-label').textContent = '未设置';
             slSlider.value = 0; slSlider.dataset.active = '0'; document.getElementById('sl-sl-label').textContent = '未设置';
             renderSLOrders();
-            alert('条件单设置成功！' + (tp ? ` 止盈¥${tp}` : '') + (sl ? ` 止损¥${sl}` : ''));
+            alert(`✅ 已为全部 ${count} 个持仓设置条件单！` + (tpPct ? ` 止盈+${(tpPct*100).toFixed(0)}%` : '') + (slPct ? ` 止损-${(slPct*100).toFixed(0)}%` : ''));
         });
 
         // 在每次价格更新时检查止盈止损
@@ -3841,28 +3523,59 @@
                 }
             });
             const totalAsset = game.cash + floatingPL;
-            game.profitHistory.push(totalAsset);
-            if (game.profitHistory.length > 20) game.profitHistory.shift();
-
-            // 更新一小时历史
-            hourlyProfitHistory.push(totalAsset);
-            if (hourlyProfitHistory.length > HOUR_CYCLES) {
-                hourlyProfitHistory.shift();
-            }
+            // profitHistory is now updated on asset change events, not here
 
             updateAll();
             updateProperties();
             checkSLOrders();
             updatePeakAndMilestones();
-            npcTick();
             processLoanInterest();
             // 新功能 tick
-            tickEconomy();
             checkLimitOrders();
             checkFutureContracts();
             earningsCountdown--;
             if (earningsCountdown <= 0) { triggerEarningsReport(); earningsCountdown = 120 + Math.floor(Math.random()*120); }
         }, 5000);
+
+
+        // ── 一键清仓（现价单面板）──
+        document.getElementById('one-click-sell-btn').addEventListener('click', () => {
+            const stock = getCurrentStock(); if (!stock) return;
+            const spots = game.positions.filter(p => p.code === stock.code && p.leverage === 1 && p.direction === 'long' && !p.isFutures);
+            if (spots.length === 0) { alert('当前股票无现货持仓'); return; }
+            const totalQty = spots.reduce((s, p) => s + p.quantity, 0);
+            const proceeds = totalQty * stock.price;
+            const totalCost = spots.reduce((s, p) => s + p.openPrice * p.quantity, 0);
+            const pl = proceeds - totalCost;
+            if (!confirm(`确认卖出 ${stock.name} 全部 ${totalQty} 股？\n到账 ¥${proceeds.toFixed(2)}，盈亏 ${pl >= 0 ? '+' : ''}${pl.toFixed(2)}`)) return;
+            game.cash += proceeds;
+            spots.forEach(p => {
+                game.history.push({ name: stock.name, type: '卖出', num: p.quantity, price: stock.price.toFixed(2), time: new Date().toLocaleTimeString(), leverage: 1, pl: ((stock.price - p.openPrice)*p.quantity).toFixed(2) });
+            });
+            game.positions = game.positions.filter(p => !(p.code === stock.code && p.leverage === 1 && p.direction === 'long' && !p.isFutures));
+            updateAll(); renderPosition(); renderTradeHistory();
+            profitHistoryPush();
+        });
+
+        // ── 一键平仓（期货面板）──
+        document.getElementById('one-click-close-btn').addEventListener('click', () => {
+            const futures = game.positions.filter(p => p.isFutures);
+            if (futures.length === 0) { alert('当前无期货持仓'); return; }
+            if (!confirm(`确认一键平仓全部 ${futures.length} 个期货合约？`)) return;
+            let totalPL = 0;
+            futures.forEach(p => {
+                const stock = game.stocks.find(s => s.code === p.code); if (!stock) return;
+                const pl = p.direction === 'long' ? (stock.price - p.openPrice)*p.quantity : (p.openPrice - stock.price)*p.quantity;
+                totalPL += pl;
+                const margin = p.margin != null ? p.margin : (p.quantity * p.openPrice / p.leverage);
+                game.cash += margin + pl;
+                game.history.push({ name: stock.name, type: p.direction==='long'?'平多':'平空', num: p.quantity, price: stock.price.toFixed(2), time: new Date().toLocaleTimeString(), leverage: p.leverage, pl: pl.toFixed(2) });
+            });
+            game.positions = game.positions.filter(p => !p.isFutures);
+            updateAll(); renderPosition(); renderTradeHistory();
+            profitHistoryPush();
+            alert(`一键平仓完成！总盈亏 ${totalPL >= 0 ? '+' : ''}${totalPL.toFixed(2)}`);
+        });
 
         // ==================== Tab 切换 ====================
         (function() {
@@ -3890,42 +3603,7 @@
         })();
 
         // ==================== 经济周期 ====================
-        const CYCLES = [
-            { id:'bull',  label:'牛市行情', desc:'上涨概率70%', upBias:0.70, color:'#00c48c' },
-            { id:'range', label:'震荡行情', desc:'上涨概率50%', upBias:0.50, color:'#ff9800' },
-            { id:'bear',  label:'熊市行情', desc:'上涨概率30%', upBias:0.30, color:'#ff5252' },
-        ];
-        let cycleIdx = 1, cycleTicks = 60 + Math.floor(Math.random()*60);
-        function getCurrentCycle() { return CYCLES[cycleIdx]; }
-        function tickEconomy() {
-            // bias price direction — patch into next price tick
-            cycleTicks--;
-            if (cycleTicks <= 0) {
-                const choices = [0,1,2].filter(i=>i!==cycleIdx);
-                cycleIdx = choices[Math.floor(Math.random()*choices.length)];
-                cycleTicks = 60 + Math.floor(Math.random()*60);
-                updateCycleBar();
-                const c = getCurrentCycle();
-                const msg = c.id==='bull'?'📈 牛市周期开启！':c.id==='bear'?'📉 熊市周期来袭！':'⚖️ 市场进入震荡期';
-                const ev = {tag:c.id==='bull'?'bull':'bear', label:'周期切换', text:msg, time:new Date().toLocaleTimeString(), impact:0};
-                newsHistory.unshift(ev); latestNews=ev;
-                if (newsSubpage && newsSubpage.style.display!=='none') renderNewsPage();
-            }
-        }
-        function updateCycleBar() {
-            const c = getCurrentCycle();
-            const dot = document.getElementById('cycle-dot');
-            const lbl = document.getElementById('cycle-label');
-            const dsc = document.getElementById('cycle-desc');
-            if (dot) dot.style.background = c.color;
-            if (lbl) lbl.textContent = c.label;
-            if (dsc) dsc.textContent = c.desc;
-        }
-        updateCycleBar();
-        // Override direction bias in price loop by patching Math.random temporarily
-        // Instead: we hook into the setInterval by modifying the direction logic directly
-        // We expose a helper used by price loop:
-        window._cycleUpBias = function() { return getCurrentCycle().upBias; };
+        // 经济周期已删除
 
         // ==================== 限价单 ====================
         let limitOrders = [];
@@ -3953,14 +3631,16 @@
             const qty = parseInt(document.getElementById('lmt-qty').value) || 1;
             if (!price || price <= 0) { alert('请输入有效触发价格'); return; }
             const cost = qty * price;
-            if (game.cash < cost) { alert('可用资金不足'); return; }
+            const feePreviewL = parseFloat((cost * getCommissionRate()).toFixed(2));
+            if (game.cash < cost + feePreviewL) { alert('可用资金不足（含手续费 ¥' + feePreviewL + '）'); return; }
             game.cash -= cost;
-            limitOrders.push({ id: Date.now(), code: stock.code, name: stock.name, price, qty, cost });
+            const feeL = applyCommission(cost);
+            limitOrders.push({ id: Date.now(), code: stock.code, name: stock.name, price, qty, cost, fee: feeL });
             document.getElementById('lmt-price').value = '';
             const avEl = document.getElementById('lmt-available');
             if (avEl) avEl.textContent = game.cash.toFixed(2);
             updateAsset(); renderLimitOrders();
-            alert('挂单成功：' + stock.name + ' x' + qty + ' @¥' + price);
+            alert('挂单成功：' + stock.name + ' x' + qty + ' @¥' + price + '，手续费 ¥' + feeL.toFixed(2));
         });
         function renderLimitOrders() {
             const el = document.getElementById('lmt-order-list'); if (!el) return;
@@ -3991,7 +3671,7 @@
                     game.cash += refund;
                     const posId = 'lmt_' + Date.now() + Math.random();
                     game.positions.push({id: posId, code: o.code, direction: 'long', quantity: o.qty, openPrice: s.price, leverage: 1, isLimit: true});
-                    game.history.push({name: o.name, type: '限价买入', num: o.qty, price: s.price.toFixed(2), time: new Date().toLocaleTimeString(), leverage: 1, pl: null});
+                    game.history.push({name: o.name, type: '限价买入', num: o.qty, price: s.price.toFixed(2), time: new Date().toLocaleTimeString(), leverage: 1, pl: null, fee: (o.fee||0).toFixed(2)});
                     filled.push(o.id);
                     alert('限价单成交：' + o.name + ' x' + o.qty + ' @¥' + s.price.toFixed(2) + '，已转入持仓');
                 }
@@ -4040,23 +3720,22 @@
             const s = getCurrentStock(); if (!s) return;
             const qty = parseInt(document.getElementById('fut-qty').value) || 1;
             const margin = (qty * s.price) / futLev;
-            if (game.cash < margin) { alert('可用资金不足'); return; }
+            const notional = qty * s.price; // 手续费按不含杠杆计算
+            const feePreviewF = parseFloat((notional * getCommissionRate()).toFixed(2));
+            if (game.cash < margin + feePreviewF) { alert('可用资金不足（含手续费 ¥' + feePreviewF + '）'); return; }
             game.cash -= margin;
+            const feeF = applyCommission(notional);
             const posId = 'fut_' + Date.now() + Math.random();
             game.positions.push({id: posId, code: s.code, direction: futDir, quantity: qty, openPrice: s.price, leverage: futLev, isFutures: true, margin: margin});
-            updateAsset(); renderPosition();
+            game.history.push({ name: s.name, type: futDir==='long'?'开多':'开空', num: qty, price: s.price.toFixed(2), time: new Date().toLocaleTimeString(), leverage: futLev, pl: null, fee: feeF.toFixed(2) });
+            profitHistoryPush();
+            updateAsset(); renderPosition(); renderTradeHistory();
             const cashEl = document.getElementById('fut-cash');
             if (cashEl) cashEl.textContent = game.cash.toFixed(2);
-            alert('期货合约已开仓！请在持仓页面手动平仓');
+            alert('期货合约已开仓！请在持仓页面手动平仓，手续费 ¥' + feeF.toFixed(2));
         });
         function renderFuturesList() {}
         function checkFutureContracts() {}
-
-        // ==================== 经济周期 → 影响价格方向 (patch) ====================
-        // Patch: 在原始价格更新 interval 之外，用 window._cycleUpBias 影响后续K线
-        // 注：原始 direction = Math.random()>0.5 已在5秒循环里；
-        // 此处通过覆盖 Math.random 不可靠，改用全局标志在循环里读取
-        // （循环已经 hook 了 tickEconomy，updateCycleBar 会更新周期）
 
         // ==================== CEO推特 / 财报季 ====================
         const CEO_TWEETS = [
@@ -4075,15 +3754,13 @@
             const impact = t.bull?(0.05+Math.random()*0.08):-(0.05+Math.random()*0.08);
             const ev = {tag:t.bull?'bull':'bear', label:'CEO推特', text:`${t.name}: "${text}"`, time:new Date().toLocaleTimeString(), impact, code:t.code, pending:true};
             newsHistory.unshift(ev); if(newsHistory.length>30) newsHistory.pop(); latestNews=ev;
-            if(newsSubpage && newsSubpage.style.display!=='none') renderNewsPage();
             fireDanmu(ev.text, ev.tag);
             updateAll();
             setTimeout(()=>{
                 const s = game.stocks.find(x=>x.code===t.code);
                 if (s) s.price = Math.max(0.5, s.price*(1+impact));
                 ev.pending=false;
-                if(newsSubpage && newsSubpage.style.display!=='none') renderNewsPage();
-                updateAll();
+                    updateAll();
             }, 10000);
         }
         const EARNINGS = [{code:'X001',name:'石油'},{code:'J002',name:'稀土'},{code:'R004',name:'科创'},{code:'K003',name:'电力'},{code:'X005',name:'粮油'}];
@@ -4095,15 +3772,13 @@
             const text = beat ? `【财报】${r.name}Q业绩超预期！营收增长${(impact*100).toFixed(0)}%` : `【财报】${r.name}Q业绩不及预期，净利润下滑${Math.abs(impact*100).toFixed(0)}%`;
             const ev = {tag:beat?'bull':'bear', label:'财报', text, time:new Date().toLocaleTimeString(), impact, code:r.code, pending:true};
             newsHistory.unshift(ev); if(newsHistory.length>30) newsHistory.pop(); latestNews=ev;
-            if(newsSubpage && newsSubpage.style.display!=='none') renderNewsPage();
             fireDanmu(text, beat?'bull':'bear');
             updateAll();
             setTimeout(()=>{
                 const s = game.stocks.find(x=>x.code===r.code);
                 if (s) s.price = Math.max(0.5, s.price*(1+impact));
                 ev.pending=false;
-                if(newsSubpage && newsSubpage.style.display!=='none') renderNewsPage();
-                updateAll();
+                    updateAll();
             }, 10000);
         }
         setInterval(()=>{ if(Math.random()<0.25) triggerCEOTweet(); }, 30000);
@@ -4199,6 +3874,8 @@
                 ipoCandles: ipoCandles,
                 ipoFrozen: ipoFrozen,
                 ipoAppeared: ipoAppeared,
+                totalTradingVolume: totalTradingVolume,
+                totalCommissionPaid: totalCommissionPaid,
                 newsHistory: newsHistory.slice(0, 20),
                 gambleStones: gambleStones,
                 timestamp: Date.now()
@@ -4227,6 +3904,8 @@
                 if (d.ipoListedStocks) ipoListedStocks = d.ipoListedStocks;
                 if (d.ipoFrozen !== undefined) ipoFrozen = d.ipoFrozen;
                 if (d.ipoAppeared !== undefined) ipoAppeared = d.ipoAppeared;
+                if (d.totalTradingVolume !== undefined) totalTradingVolume = d.totalTradingVolume;
+                if (d.totalCommissionPaid !== undefined) totalCommissionPaid = d.totalCommissionPaid;
                 if (d.newsHistory) { newsHistory = d.newsHistory; latestNews = newsHistory[0] || null; }
                 if (d.gambleStones) gambleStones = d.gambleStones;
                 // Restore IPO stocks and their candle data
@@ -4280,8 +3959,7 @@
             const el = document.getElementById('ranking-list');
             if (!el) return;
             const playerAsset = getTotalAsset();
-            const npcData = (typeof npcs !== 'undefined' ? npcs : []).map(n => ({ name: n.emoji + ' ' + n.name, asset: n.asset || 10000 }));
-            const all = [{ name: '⭐ 我', asset: playerAsset }].concat(npcData).sort((a, b) => b.asset - a.asset);
+            const all = [{ name: '⭐ 我', asset: playerAsset }];
             const medals = ['🥇','🥈','🥉'];
             el.innerHTML = all.map((p, i) => {
                 let aStr = p.asset >= 1e8 ? (p.asset/1e8).toFixed(2)+'亿' : p.asset >= 10000 ? (p.asset/10000).toFixed(2)+'万' : p.asset.toFixed(0);
@@ -4353,11 +4031,29 @@
             alert(name + ' 已存入仓库！');
         };
 
+        // 每5分钟重置拍卖品
+        setInterval(() => {
+            auctionState = {};
+            const auctionSubpageEl = document.getElementById('auction-subpage');
+            if (auctionSubpageEl && auctionSubpageEl.style.display !== 'none') {
+                renderAuction();
+                // Show a brief toast
+                const el = document.getElementById('auction-content');
+                if (el) {
+                    const notice = document.createElement('div');
+                    notice.textContent = '🔄 拍卖品已全部刷新！';
+                    notice.style.cssText = 'background:#4285f4;color:#fff;padding:8px 12px;border-radius:8px;text-align:center;font-size:13px;margin-bottom:10px;';
+                    el.insertBefore(notice, el.firstChild);
+                    setTimeout(() => notice.remove(), 3000);
+                }
+            }
+        }, 5 * 60 * 1000);
+
         // ==================== 基金系统 ====================
         const FUNDS = [
-            { id: 'growth',  name: '🚀 成长基金', desc: '科创/电力，高风险高收益', rate: 0.03,  minInvest: 10000, type: 'commercial' },
-            { id: 'stable',  name: '🏦 稳健基金', desc: '多元化配置，低波动稳定', rate: 0.008, minInvest: 5000,  type: 'commercial' },
-            { id: 'quant',   name: '🤖 量化基金', desc: '算法择时，跟踪趋势',     rate: 0.015, minInvest: 20000, type: 'commercial' },
+            { id: 'growth',  name: '🚀 成长基金', desc: '科创/电力，高风险高收益', rate: 0.003,  minInvest: 10000, type: 'commercial' },
+            { id: 'stable',  name: '🏦 稳健基金', desc: '多元化配置，低波动稳定', rate: 0.0008, minInvest: 5000,  type: 'commercial' },
+            { id: 'quant',   name: '🤖 量化基金', desc: '算法择时，跟踪趋势',     rate: 0.0015, minInvest: 20000, type: 'commercial' },
             { id: 'charity', name: '❤️ 公益基金', desc: '助力社会，仅支持捐赠',   rate: 0,     minInvest: 100,   type: 'charity' },
         ];
         function renderFund() {
@@ -4366,7 +4062,8 @@
             const totalAsset = getTotalAsset();
             el.innerHTML = FUNDS.map(f => {
                 const pos = fundPositions[f.id];
-                const currentVal = pos ? pos.invested * (1 + f.rate * (pos.cycles || 0)) : 0;
+                const vipBonus = ownedProperties['villa'] ? 0.03 : 0;
+                const currentVal = pos ? pos.invested * (1 + (f.rate + f.rate * vipBonus) * (pos.cycles || 0)) : 0;
                 if (f.type === 'commercial') {
                     const sliderId = 'fund-slider-' + f.id;
                     const labelId = 'fund-label-' + f.id;
@@ -4377,7 +4074,7 @@
                         + '<div style="font-weight:700;font-size:15px;margin-bottom:2px;">' + f.name + '</div>'
                         + '<div style="font-size:12px;color:#888;margin-bottom:6px;">' + f.desc + '</div>'
                         + '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:8px;">'
-                        + '<span>每周期收益：<span style="color:#00c48c;">+' + (f.rate*100).toFixed(1) + '%</span></span>'
+                        + '<span>每周期收益：<span style="color:#00c48c;">+' + (f.rate*100).toFixed(1) + '%</span>' + (ownedProperties['villa'] ? '<span style="color:#ff9800;font-size:11px;"> (+贵宾3%加成)</span>' : '') + '</span>'
                         + (pos ? '<span style="color:#4285f4;">持有中：¥' + currentVal.toFixed(0) + '</span>' : '')
                         + '</div>'
                         + '<div style="margin-bottom:8px;">'
@@ -4441,7 +4138,8 @@
         window.redeemFund = function(id) {
             const pos = fundPositions[id]; if (!pos) return;
             const f = FUNDS.find(x => x.id === id);
-            const val = pos.invested * (1 + f.rate * (pos.cycles || 0));
+            const vipBonusW = ownedProperties['villa'] ? 0.03 : 0;
+            const val = pos.invested * (1 + (f.rate + f.rate * vipBonusW) * (pos.cycles || 0));
             game.cash += val; delete fundPositions[id];
             updateAsset(); renderFund();
             alert('赎回成功！获得 ¥' + val.toFixed(2));
@@ -4481,7 +4179,7 @@
                     ? '<div style="color:#00c48c;font-weight:700;font-size:15px;">✅ 贵宾会员</div><div style="color:#888;font-size:12px;margin-top:6px;">每60秒自动赠送📱手机17（¥12,000）存入仓库</div>'
                     : '<div style="color:#999;font-size:14px;">需购买顶级别墅方可解锁</div><div style="color:#4285f4;margin-top:6px;font-size:12px;">→ 综合 > 房产投资 > 顶级别墅</div>')
                 + '</div><div class="card" style="margin:0;"><div class="card-title">贵宾专属福利</div>'
-                + '<div style="font-size:14px;color:#555;line-height:2.2;">👑 期货杠杆解锁50倍<br>📱 每60秒手机17 x1（售¥12,000）<br>📊 理财利率额外+10%</div></div>';
+                + '<div style="font-size:14px;color:#555;line-height:2.2;">👑 期货杠杆解锁50倍<br>📱 每60秒手机17 x1（售¥12,000）<br>📊 理财利率额外+3%<br>💳 交易手续费减少0.2%</div></div>';
         }
         function processVipBenefit() {
             if (!ownedProperties['villa']) return;
@@ -4528,6 +4226,30 @@
                     else if (func === 'warehouse') { showSubpage(warehouseSubpage); renderWarehouse(); }
                 });
             });
+            // ── 当前股票的持仓虚线 ──
+            const curPositions = game.positions.filter(p => p.code === game.currentCode);
+            curPositions.forEach(p => {
+                const drawDashedLine = (priceVal, color) => {
+                    const yPos = topMargin + innerHeight - ((priceVal - minPrice) / range) * innerHeight;
+                    if (yPos < topMargin - 5 || yPos > topMargin + innerHeight + 5) return;
+                    const dl = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    dl.setAttribute('x1', leftMargin); dl.setAttribute('x2', 380 - rightMargin);
+                    dl.setAttribute('y1', yPos); dl.setAttribute('y2', yPos);
+                    dl.setAttribute('stroke', color); dl.setAttribute('stroke-width', '1');
+                    dl.setAttribute('stroke-dasharray', '4,3');
+                    dl.setAttribute('opacity', '0.8');
+                    candlesEl.appendChild(dl);
+                };
+                // Open price (black dashed)
+                drawDashedLine(p.openPrice, '#555');
+                // TP/SL lines
+                const slOrder = slOrders.find(o => o.positionId === p.id);
+                if (slOrder) {
+                    if (slOrder.tp) drawDashedLine(slOrder.tp, '#00c48c');
+                    if (slOrder.sl) drawDashedLine(slOrder.sl, '#ff5252');
+                }
+            });
+
         })();
 
         renderStockList();
