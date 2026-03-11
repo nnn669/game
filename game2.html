@@ -2834,9 +2834,10 @@
         let ipoAppeared = 0;        // 玩家已申购的股数
         let ipoFrozen = 0;          // 冻结资金
 
-        const IPO_INTERVAL = 300;    // 固定5分钟触发一次
-        const IPO_DURATION = 60;      // 申购窗口（秒）
-        let ipoNextIn = IPO_INTERVAL;
+        const IPO_COOLDOWN = 300;     // 冷却期：5分钟
+        const IPO_DURATION = 60;      // 申购窗口：1分钟
+        let ipoPhase = 'cooldown';    // 'cooldown' | 'active'
+        let ipoNextIn = IPO_COOLDOWN; // 冷却倒计时（秒）
         let ipoTimerTick = 0;
         let ipoSliderPct = 25;   // persisted slider position
 
@@ -2956,7 +2957,9 @@
                 newsHistory.unshift(ev); if(newsHistory.length>30) newsHistory.pop(); latestNews=ev;
             }
 
-            ipoNextIn = IPO_INTERVAL; // 重置5分钟倒计时（从发行/未中签后开始）
+            // ── 重置为冷却期，5分钟后再次触发 ──
+            ipoPhase = 'cooldown';
+            ipoNextIn = IPO_COOLDOWN;
             updateAsset();
             renderStockList();
             if (ipoSubpage && ipoSubpage.style.display !== 'none') renderIPOPage();
@@ -2990,31 +2993,36 @@
 
         function tickIPO() {
             ipoTimerTick++;
-            // Count down IPO window
-            if (ipoActive) {
+
+            if (ipoPhase === 'active' && ipoActive) {
+                // ── 申购窗口倒计时 ──
                 ipoActive.countdown--;
                 if (ipoActive.countdown <= 0) {
-                    closeIPO();
+                    closeIPO(); // → 内部重置为 cooldown
                     return;
                 }
                 if (ipoSubpage && ipoSubpage.style.display !== 'none') {
-                    // Only update countdown label in-place to avoid resetting the slider
                     const countEl = document.getElementById('ipo-countdown-live');
                     if (countEl) {
                         const c = ipoActive.countdown;
                         countEl.textContent = c + '秒';
                         countEl.style.color = c <= 15 ? '#ff5252' : c <= 30 ? '#ff9800' : '#4285f4';
                     } else {
-                        renderIPOPage(); // first render when subpage just opened
+                        renderIPOPage();
                     }
                 }
                 return;
             }
-            // Schedule next IPO
+
+            // ── 冷却期倒计时 ──
             ipoNextIn--;
+            if (ipoSubpage && ipoSubpage.style.display !== 'none') {
+                const countEl = document.getElementById('ipo-cooldown-live');
+                if (countEl) countEl.textContent = ipoNextIn;
+            }
             if (ipoNextIn <= 0) {
+                ipoPhase = 'active';
                 generateIPO();
-                ipoNextIn = IPO_INTERVAL;
             }
 
             // IPO股退市：随机触发 OR 价格跌破1元
@@ -3054,11 +3062,15 @@
             if (existingSlider) ipoSliderPct = parseInt(existingSlider.value) || ipoSliderPct;
 
             if (!ipoActive) {
-                const nextSec = ipoNextIn;
+                const mins = Math.floor(ipoNextIn / 60);
+                const secs = ipoNextIn % 60;
+                const timeStr = mins > 0 ? `${mins}分${secs.toString().padStart(2,'0')}秒` : `${ipoNextIn}秒`;
                 cardEl.innerHTML = `<div style="text-align:center;padding:20px;">
                     <div style="font-size:32px;margin-bottom:8px;">🚀</div>
-                    <div style="font-weight:700;font-size:16px;color:#333;margin-bottom:6px;">暂无新股发行</div>
-                    <div style="font-size:13px;color:#999;">预计 <span style="color:#4285f4;font-weight:700;">${nextSec}</span> 秒后有新股发行</div>
+                    <div style="font-weight:700;font-size:16px;color:#333;margin-bottom:6px;">冷却中</div>
+                    <div style="font-size:13px;color:#999;margin-bottom:8px;">距下次IPO发行还有</div>
+                    <div style="font-size:clamp(22px,6vw,28px);font-weight:700;color:#4285f4;" id="ipo-cooldown-live">${ipoNextIn}</div>
+                    <div style="font-size:12px;color:#bbb;margin-top:4px;">${timeStr}</div>
                 </div>`;
             } else {
                 const ipo = ipoActive;
