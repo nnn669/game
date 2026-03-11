@@ -881,15 +881,6 @@
         .news-tag-swan { background:#1a1a2e; color:#e0c060; }
 
         /* ---------- 内幕消息 ---------- */
-        .insider-card {
-            background:#f7f8fa;
-            border:1px solid #f0f0f0;
-            border-radius:12px;
-            padding:14px;
-        }
-        .insider-result-true  { color:#00c48c; font-weight:600; }
-        .insider-result-false { color:#ff5252; font-weight:600; }
-
         /* ---------- 贷款选项 ---------- */
         .loan-option {
             display:flex;
@@ -1053,10 +1044,10 @@
                         </div>
                     </div>
                     <div class="quick-buttons" style="margin:8px 0;">
-                        <button class="quick-btn fut-pct" data-pct="25">25%</button>
-                        <button class="quick-btn fut-pct" data-pct="50">50%</button>
-                        <button class="quick-btn fut-pct" data-pct="75">75%</button>
-                        <button class="quick-btn fut-pct" data-pct="100">100%</button>
+                        <button class="quick-btn fut-pct" data-percent="25" data-pct="25">25%</button>
+                        <button class="quick-btn fut-pct" data-percent="50" data-pct="50">50%</button>
+                        <button class="quick-btn fut-pct" data-percent="75" data-pct="75">75%</button>
+                        <button class="quick-btn fut-pct" data-percent="100" data-pct="100">100%</button>
                     </div>
                     <div class="available-funds">可用资金: <span id="fut-cash">10000.00</span></div>
                     <button id="fut-open-btn" class="open-btn" style="width:100%;margin-top:4px;">开多合约</button>
@@ -1156,11 +1147,6 @@
                 <div class="fn-name">市场新闻</div>
                 <div class="fn-desc">突发事件 / 黑天鹅</div>
             </div>
-            <div class="fn-card fn-card-wide" data-function="insider">
-                <div class="fn-icon">🕵️</div>
-                <div class="fn-name">内幕消息</div>
-                <div class="fn-desc">花钱买情报，真假难辨</div>
-            </div>
         </div>
 
         <!-- 高级玩法 分区 -->
@@ -1172,6 +1158,9 @@
         <div class="fn-row fn-row-2">
             <div class="fn-card fn-card-wide" data-function="fund"><div class="fn-icon">📈</div><div class="fn-name">基金</div><div class="fn-desc">商业基金 · 公益捐赠</div></div>
             <div class="fn-card fn-card-wide" data-function="vip"><div class="fn-icon">👑</div><div class="fn-name">贵宾服务</div><div class="fn-desc">银行VIP · 专属福利</div></div>
+        </div>
+        <div class="fn-row fn-row-1">
+            <div class="fn-card fn-card-wide" data-function="ipo" id="ipo-fn-card"><div class="fn-icon">🚀</div><div class="fn-name">IPO申购</div><div class="fn-desc" id="ipo-fn-desc">暂无新股发行</div></div>
         </div>
 
         <!-- 账户管理 分区 -->
@@ -1437,22 +1426,20 @@
     </div>
 
     <!-- 内幕消息子界面 -->
-    <div id="insider-subpage" class="sub-page" style="display:none;">
+
+    <!-- IPO申购子界面 -->
+    <div id="ipo-subpage" class="sub-page" style="display:none;">
         <div class="sub-header">
-            <button id="back-to-functions-insider" class="back-btn">← 返回</button>
-            <span class="sub-title">🕵️ 内幕消息</span>
+            <button id="back-to-functions-ipo" class="back-btn">← 返回</button>
+            <span class="sub-title">🚀 IPO新股申购</span>
         </div>
         <div style="padding:0 16px 16px;">
-            <div class="card" style="margin:0 0 12px;">
-                <div style="background:#fff8e1;border-radius:10px;padding:12px;margin-bottom:14px;font-size:clamp(11px,3vw,13px);color:#8a6d00;line-height:1.6;">
-                    ⚠️ 内幕消息真实性约 60%，存在故意误导风险。投资需谨慎！
-                </div>
-                <div class="card-title">购买情报</div>
-                <div style="display:flex;flex-direction:column;gap:10px;" id="insider-options"></div>
+            <div class="card" style="margin:0 0 12px;" id="ipo-issue-card">
+                <div style="color:#999;text-align:center;padding:24px;font-size:14px;">暂无新股发行</div>
             </div>
             <div class="card" style="margin:0;">
-                <div class="card-title">已购情报</div>
-                <div id="insider-bought-list"><div style="color:#999;text-align:center;padding:16px;font-size:clamp(12px,3.2vw,14px);">暂未购买任何情报</div></div>
+                <div class="card-title">申购记录</div>
+                <div id="ipo-history-list"><div style="color:#999;text-align:center;padding:16px;font-size:clamp(12px,3.2vw,14px);">暂无申购记录</div></div>
             </div>
         </div>
     </div>
@@ -1528,7 +1515,7 @@
     <div class="nav-item" data-page="page-position" id="nav-position">持仓</div>
     <div class="nav-item" data-page="page-trade">交易</div>
     <div class="nav-item" data-page="page-asset" id="nav-asset">资产</div>
-    <div class="nav-item" data-page="page-history">综合</div>
+    <div class="nav-item" data-page="page-history" id="nav-history">综合</div>
 </div>
 
 <script>
@@ -1702,14 +1689,14 @@
         const leaderboardSubpage = document.getElementById('leaderboard-subpage');
         // 新功能元素
         const newsSubpage = document.getElementById('news-subpage');
-        const insiderSubpage = document.getElementById('insider-subpage');
+        const ipoSubpage = document.getElementById('ipo-subpage');
         const loanSubpage = document.getElementById('loan-subpage');
         const npcSubpage = document.getElementById('npc-subpage');
 
         const ALL_SUBPAGES = [
             propertySubpage, redeemSubpage, warehouseSubpage, gambleSubpage,
             slSubpage, achievementSubpage, leaderboardSubpage,
-            newsSubpage, insiderSubpage, loanSubpage, npcSubpage
+            newsSubpage, ipoSubpage, loanSubpage, npcSubpage
         ];
 
         function showFunctionMain() {
@@ -1738,7 +1725,11 @@
         // ==================== 百分比按钮 ====================
         quickBtns.forEach(btn => {
             btn.addEventListener("click", () => {
-                quickBtns.forEach(b => b.classList.remove("active"));
+                // Only handle market-panel (non-fut-pct, non-lmt-pct) buttons here
+                if (btn.classList.contains('fut-pct') || btn.classList.contains('lmt-pct')) return;
+                quickBtns.forEach(b => {
+                    if (!b.classList.contains('fut-pct') && !b.classList.contains('lmt-pct')) b.classList.remove("active");
+                });
                 btn.classList.add("active");
                 const percent = parseInt(btn.textContent) / 100;
                 const stock = getCurrentStock();
@@ -1940,8 +1931,8 @@
                     showSubpage(leaderboardSubpage); renderLeaderboard();
                 } else if (func === 'news') {
                     showSubpage(newsSubpage); renderNewsPage();
-                } else if (func === 'insider') {
-                    showSubpage(insiderSubpage); renderInsiderPage();
+                } else if (func === 'ipo') {
+                    showSubpage(ipoSubpage); renderIPOPage();
                 } else if (func === 'loan') {
                     showSubpage(loanSubpage); renderLoanPage();
                 } else if (func === 'npc') {
@@ -1969,7 +1960,7 @@
         document.getElementById('back-to-functions-achievement').addEventListener('click', () => showFunctionMain());
         document.getElementById('back-to-functions-leaderboard').addEventListener('click', () => showFunctionMain());
         document.getElementById('back-to-functions-news').addEventListener('click', () => showFunctionMain());
-        document.getElementById('back-to-functions-insider').addEventListener('click', () => showFunctionMain());
+        document.getElementById('back-to-functions-ipo').addEventListener('click', () => showFunctionMain());
         document.getElementById('back-to-functions-loan').addEventListener('click', () => showFunctionMain());
         document.getElementById('back-to-functions-npc').addEventListener('click', () => showFunctionMain());
 
@@ -2922,17 +2913,24 @@
         let latestNews = null;
 
         function applyNewsEvent(event) {
-            if (event.code === 'ALL') {
-                game.stocks.forEach(s => { s.price = Math.max(0.5, s.price * (1 + event.impact)); });
-            } else {
-                const s = game.stocks.find(x => x.code === event.code);
-                if (s) s.price = Math.max(0.5, s.price * (1 + event.impact));
-            }
-            const entry = { ...event, time: new Date().toLocaleTimeString() };
+            // 新闻立刻显示，10秒后才触发股价变动
+            const entry = { ...event, time: new Date().toLocaleTimeString(), pending: true };
             newsHistory.unshift(entry);
             if (newsHistory.length > 20) newsHistory.pop();
             latestNews = entry;
+            if (newsSubpage && newsSubpage.style.display !== 'none') renderNewsPage();
             updateAll();
+            setTimeout(() => {
+                if (event.code === 'ALL') {
+                    game.stocks.forEach(s => { s.price = Math.max(0.5, s.price * (1 + event.impact)); });
+                } else {
+                    const s = game.stocks.find(x => x.code === event.code);
+                    if (s) s.price = Math.max(0.5, s.price * (1 + event.impact));
+                }
+                entry.pending = false;
+                if (newsSubpage && newsSubpage.style.display !== 'none') renderNewsPage();
+                updateAll();
+            }, 10000);
         }
 
         function renderNewsPage() {
@@ -2940,14 +2938,16 @@
             const historyEl = document.getElementById('news-history-list');
             if (latestNews) {
                 const cls = latestNews.tag === 'bull' ? 'news-tag-bull' : latestNews.tag === 'bear' ? 'news-tag-bear' : 'news-tag-swan';
-                latestEl.innerHTML = `<span class="news-tag ${cls}">${latestNews.label}</span><span style="font-size:clamp(13px,3.5vw,15px);color:#222;">${latestNews.text}</span><div style="margin-top:6px;font-size:clamp(11px,3vw,13px);color:#999;">${latestNews.time} · 影响 ${latestNews.impact > 0 ? '+' : ''}${(latestNews.impact*100).toFixed(0)}%</div>`;
+                const pendingTip = latestNews.pending ? '<span style="color:#ff9800;font-size:12px;"> ⏳ 10秒后股价变动</span>' : '';
+                latestEl.innerHTML = `<span class="news-tag ${cls}">${latestNews.label}</span><span style="font-size:clamp(13px,3.5vw,15px);color:#222;">${latestNews.text}</span>${pendingTip}<div style="margin-top:6px;font-size:clamp(11px,3vw,13px);color:#999;">${latestNews.time} · 影响 ${latestNews.impact > 0 ? '+' : ''}${(latestNews.impact*100).toFixed(0)}%</div>`;
             }
             if (newsHistory.length === 0) {
                 historyEl.innerHTML = '<div style="color:#999;text-align:center;padding:16px;font-size:clamp(12px,3.2vw,14px);">暂无历史事件</div>';
             } else {
                 historyEl.innerHTML = newsHistory.map(n => {
                     const cls = n.tag === 'bull' ? 'news-tag-bull' : n.tag === 'bear' ? 'news-tag-bear' : 'news-tag-swan';
-                    return `<div class="news-item"><span class="news-tag ${cls}">${n.label}</span><span style="font-size:clamp(12px,3.2vw,14px);color:#333;">${n.text}</span><div style="margin-top:4px;font-size:clamp(11px,3vw,12px);color:#999;">${n.time} · ${n.impact>0?'+':''}${(n.impact*100).toFixed(0)}%</div></div>`;
+                    const pendingBadge = n.pending ? '<span style="color:#ff9800;font-size:11px;margin-left:6px;">⏳ 10秒后生效</span>' : '';
+                    return `<div class="news-item"><span class="news-tag ${cls}">${n.label}</span><span style="font-size:clamp(12px,3.2vw,14px);color:#333;">${n.text}</span>${pendingBadge}<div style="margin-top:4px;font-size:clamp(11px,3vw,12px);color:#999;">${n.time} · ${n.impact>0?'+':''}${(n.impact*100).toFixed(0)}%</div></div>`;
                 }).join('');
             }
         }
@@ -2984,62 +2984,334 @@
             }
         }, 90000);
 
-        // ==================== 内幕消息 ====================
-        const INSIDER_TIPS = [
-            { stock:'X001', name:'石油', hint:'消息称中东将有重大协议达成', direction:'up',   cost:8000,  accuracy:0.6 },
-            { stock:'J002', name:'稀土', hint:'据悉稀土出口配额将大幅缩减', direction:'up',   cost:12000, accuracy:0.6 },
-            { stock:'R004', name:'科创', hint:'有知情人士透露科创将受政策打压', direction:'down', cost:10000, accuracy:0.6 },
-            { stock:'K003', name:'电力', hint:'电力改革方案或提前落地，利好显著', direction:'up', cost:9000, accuracy:0.6 },
-            { stock:'X005', name:'粮油', hint:'国际粮价异动，粮油板块或承压', direction:'down', cost:7000, accuracy:0.6 },
-        ];
-        let boughtInsiders = [];
 
-        function renderInsiderPage() {
-            const optEl = document.getElementById('insider-options');
-            const boughtEl = document.getElementById('insider-bought-list');
-            optEl.innerHTML = INSIDER_TIPS.map((tip, i) => `
-                <div class="insider-card">
-                    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
-                        <div>
-                            <span style="font-size:clamp(13px,3.8vw,15px);font-weight:700;color:#222;">${tip.name}</span>
-                            <span style="font-size:clamp(11px,3vw,13px);color:#999;margin-left:6px;">情报</span>
-                        </div>
-                        <span style="font-size:clamp(12px,3.2vw,14px);color:#ff9800;font-weight:600;">¥${tip.cost.toLocaleString()}</span>
-                    </div>
-                    <div style="font-size:clamp(12px,3.2vw,14px);color:#555;margin-bottom:10px;">${tip.hint.replace(/./g, '?')}</div>
-                    <button class="btn btn-primary" onclick="buyInsider(${i})" style="width:100%;padding:9px;font-size:clamp(12px,3.2vw,14px);">购买情报</button>
-                </div>
-            `).join('');
-            if (boughtInsiders.length === 0) {
-                boughtEl.innerHTML = '<div style="color:#999;text-align:center;padding:16px;font-size:clamp(12px,3.2vw,14px);">暂未购买任何情报</div>';
+        // ==================== IPO新股申购 ====================
+        const IPO_STOCK_NAMES = [
+            '绿能科技','蓝海通讯','华芯半导体','星辰医疗','金石矿业','云端数据',
+            '宏图新能','鑫源材料','银河航天','泰和生物','东方算力','晶锐光学',
+            '远望智能','浩博传媒','铭德精工','天启储能','洲际物流','顺达电商'
+        ];
+        const IPO_USED_NAMES = new Set();
+
+        let ipoActive = null;       // 当前发行中的IPO: {code,name,issuePrice,totalShares,countdown,applicants,frozenCash}
+        let ipoHistory = [];        // 申购记录
+        let ipoListedStocks = [];   // 已上市的IPO股票code列表
+        let ipoCountdown = 0;       // IPO发行结束倒计时（秒）
+        let ipoAppeared = 0;        // 玩家已申购的股数
+        let ipoFrozen = 0;          // 冻结资金
+
+        const IPO_INTERVAL = 300;    // 固定5分钟触发一次
+        const IPO_DURATION = 60;      // 申购窗口（秒）
+        let ipoNextIn = IPO_INTERVAL;
+        let ipoTimerTick = 0;
+        let ipoSliderPct = 25;   // persisted slider position
+
+        function setIPOBadge(show) {
+            // Badge on 综合 nav
+            const navHistory = document.getElementById('nav-history');
+            let nb = navHistory ? navHistory.querySelector('.ipo-nav-badge') : null;
+            if (show) {
+                if (navHistory && !nb) {
+                    nb = document.createElement('span');
+                    nb.className = 'ipo-nav-badge liquidation-badge';
+                    nb.textContent = '新';
+                    nb.style.cssText = 'background:#ff9800;font-size:9px;min-width:16px;height:16px;';
+                    navHistory.appendChild(nb);
+                }
             } else {
-                boughtEl.innerHTML = boughtInsiders.map(b => `
-                    <div style="padding:12px 0;border-bottom:1px solid #f5f5f5;">
-                        <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
-                            <span style="font-weight:600;font-size:clamp(13px,3.5vw,15px);">${b.name}</span>
-                            <span class="${b.real ? 'insider-result-true' : 'insider-result-false'}">${b.real ? '✓ 消息属实' : '✗ 消息有误'}</span>
-                        </div>
-                        <div style="font-size:clamp(12px,3.2vw,14px);color:#444;">${b.hint}</div>
-                        <div style="font-size:clamp(11px,3vw,13px);color:#999;margin-top:3px;">${b.time}</div>
-                    </div>
-                `).join('');
+                if (nb) nb.remove();
+            }
+            // Badge on IPO fn-card
+            const ipoCard = document.getElementById('ipo-fn-card');
+            let cb = ipoCard ? ipoCard.querySelector('.ipo-card-badge') : null;
+            if (show) {
+                if (ipoCard && !cb) {
+                    cb = document.createElement('span');
+                    cb.className = 'ipo-card-badge';
+                    cb.textContent = '新';
+                    cb.style.cssText = 'position:absolute;top:6px;right:6px;background:#ff9800;color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:20px;line-height:1.4;z-index:10;pointer-events:none;';
+                    ipoCard.style.position = 'relative';
+                    ipoCard.appendChild(cb);
+                }
+            } else {
+                if (cb) cb.remove();
             }
         }
 
-        window.buyInsider = function(idx) {
-            const tip = INSIDER_TIPS[idx];
-            if (game.cash < tip.cost) { alert('现金不足'); return; }
-            game.cash -= tip.cost;
-            const real = Math.random() < tip.accuracy;
-            boughtInsiders.unshift({
-                name: tip.name,
-                hint: real ? tip.hint : tip.hint.replace('大幅缩减','扩大供给').replace('将受政策打压','将获政策红利').replace('利好显著','阻力较大').replace('或承压','有望走强').replace('重大协议达成','协议谈判破裂'),
-                real,
-                time: new Date().toLocaleTimeString()
-            });
+                function generateIPO() {
+            const availNames = IPO_STOCK_NAMES.filter(n => !IPO_USED_NAMES.has(n));
+            if (!availNames.length) return;
+            const name = availNames[Math.floor(Math.random() * availNames.length)];
+            IPO_USED_NAMES.add(name);
+            const codeNum = 100 + Math.floor(Math.random() * 900);
+            const code = 'I' + codeNum;
+            const issuePrice = (Math.random() * 40 + 10).toFixed(2) * 1; // 10-50元
+            const totalShares = (Math.floor(Math.random() * 9) + 2) * 100; // 200-1000股
+            ipoActive = { code, name, issuePrice, totalShares, countdown: IPO_DURATION, applicants: 0 };
+            ipoCountdown = IPO_DURATION;
+            ipoAppeared = 0;
+            ipoFrozen = 0;
+            ipoSliderPct = 25;
+
+            // Update fn-card desc + badges
+            const descEl = document.getElementById('ipo-fn-desc');
+            if (descEl) descEl.textContent = `${name} ¥${issuePrice} 新股申购中！`;
+            setIPOBadge(true);
+            // Add news
+            const ev = { tag:'bull', label:'IPO', text:`【IPO】${name}(${code}) 发行价¥${issuePrice}，发行量${totalShares}股，限时${IPO_DURATION}秒申购！`, time:new Date().toLocaleTimeString(), impact:0 };
+            newsHistory.unshift(ev); if(newsHistory.length>30) newsHistory.pop(); latestNews=ev;
+            if (newsSubpage && newsSubpage.style.display !== 'none') renderNewsPage();
+            if (ipoSubpage && ipoSubpage.style.display !== 'none') renderIPOPage();
+            updateAll();
+        }
+
+        function closeIPO(won) {
+            if (!ipoActive) return;
+            const ipo = ipoActive;
+            ipoActive = null;
+            const descEl = document.getElementById('ipo-fn-desc');
+            if (descEl) descEl.textContent = '暂无新股发行';
+            setIPOBadge(false);
+
+            // Resolve lottery
+            if (ipoAppeared > 0) {
+                const drawChance = 0.3;
+                const won = Math.random() < drawChance;
+                const frozenReturn = ipoFrozen;
+                ipoFrozen = 0;
+                game.cash += frozenReturn; // unfreeze all
+
+                if (won) {
+                    const shares = ipoAppeared;
+                    const cost = shares * ipo.issuePrice;
+                    game.cash -= cost; // deduct actual purchase
+                    // Add to game stocks
+                    const newStock = { code: ipo.code, name: ipo.name, desc: 'IPO上市', price: ipo.issuePrice, basePrice: ipo.issuePrice, isIPO: true };
+                    game.stocks.push(newStock);
+                    game.candleData[ipo.code] = generateInitialCandles(ipo.issuePrice, ipo.code);
+                    // Add position as long spot
+                    game.positions.push({
+                        id: 'ipo_' + Date.now(),
+                        code: ipo.code,
+                        direction: 'long',
+                        quantity: shares,
+                        openPrice: ipo.issuePrice,
+                        leverage: 1,
+                        margin: cost,
+                        isSpot: true,
+                        isIPO: true
+                    });
+                    ipoListedStocks.push(ipo.code);
+                    ipoHistory.unshift({ name:ipo.name, code:ipo.code, result:'中签', shares, cost, time:new Date().toLocaleTimeString() });
+                    renderStockList();
+
+                    // 1分钟后暴涨/破发
+                    setTimeout(() => { triggerIPOVolatility(ipo.code, ipo.name); }, 60000);
+
+                    const ev = { tag:'bull', label:'IPO中签', text:`🎉 恭喜！${ipo.name} 中签 ${shares} 股，已上市！`, time:new Date().toLocaleTimeString(), impact:0 };
+                    newsHistory.unshift(ev); if(newsHistory.length>30) newsHistory.pop(); latestNews=ev;
+                    alert(`🎉 IPO中签！${ipo.name} × ${shares} 股 @¥${ipo.issuePrice}\n已加入持仓，1分钟后股价将剧烈波动！`);
+                } else {
+                    ipoHistory.unshift({ name:ipo.name, code:ipo.code, result:'未中签', shares:0, cost:0, time:new Date().toLocaleTimeString() });
+                    const ev = { tag:'bear', label:'IPO未中', text:`😔 ${ipo.name} 未中签，资金已解冻`, time:new Date().toLocaleTimeString(), impact:0 };
+                    newsHistory.unshift(ev); if(newsHistory.length>30) newsHistory.pop(); latestNews=ev;
+                    alert(`😔 ${ipo.name} 未中签，冻结资金已全额解冻。`);
+                }
+            } else {
+                // No application, just expire
+                const ev = { tag:'bear', label:'IPO结束', text:`${ipo.name} 申购窗口关闭，无人申购`, time:new Date().toLocaleTimeString(), impact:0 };
+                newsHistory.unshift(ev); if(newsHistory.length>30) newsHistory.pop(); latestNews=ev;
+            }
+
             updateAsset();
-            renderInsiderPage();
-            alert(real ? `✓ 情报已解密：${tip.hint}` : `✗ 情报已解密（请注意甄别）`);
+            renderStockList();
+            if (newsSubpage && newsSubpage.style.display !== 'none') renderNewsPage();
+            if (ipoSubpage && ipoSubpage.style.display !== 'none') renderIPOPage();
+            updateAll();
+        }
+
+        function triggerIPOVolatility(code, name) {
+            const stock = game.stocks.find(s => s.code === code);
+            if (!stock) return;
+            const boom = Math.random() < 0.5;
+            let newPrice;
+            if (boom) {
+                const mult = 10 + Math.random() * 40; // ×10 ~ ×50
+                newPrice = stock.price * mult;
+                const ev = { tag:'bull', label:'IPO暴涨', text:`🚀 ${name} 上市暴涨！股价涨至 ¥${newPrice.toFixed(2)} (×${mult.toFixed(1)})`, time:new Date().toLocaleTimeString(), impact: mult - 1 };
+                newsHistory.unshift(ev); if(newsHistory.length>30) newsHistory.pop(); latestNews=ev;
+            } else {
+                const drop = 0.1 + Math.random() * 0.1; // -10% ~ -20%... wait spec says x10-x20 drop? Let me re-read
+                // Spec: 破发几率50%（股价减x10-x20）-> I interpret as drop by factor, price / 10~20
+                const divider = 10 + Math.random() * 10;
+                newPrice = Math.max(0.5, stock.price / divider);
+                const dropPct = ((1 - newPrice / stock.price) * 100).toFixed(0);
+                const ev = { tag:'bear', label:'IPO破发', text:`📉 ${name} 上市破发！股价跌至 ¥${newPrice.toFixed(2)} (-${dropPct}%)`, time:new Date().toLocaleTimeString(), impact: newPrice/stock.price - 1 };
+                newsHistory.unshift(ev); if(newsHistory.length>30) newsHistory.pop(); latestNews=ev;
+            }
+            stock.price = Math.max(0.5, newPrice);
+            // Generate new candle data from new price
+            game.candleData[code] = generateInitialCandles(stock.price, code);
+            if (newsSubpage && newsSubpage.style.display !== 'none') renderNewsPage();
+            renderStockList();
+            updateAll();
+        }
+
+        function tickIPO() {
+            ipoTimerTick++;
+            // Count down IPO window
+            if (ipoActive) {
+                ipoActive.countdown--;
+                if (ipoActive.countdown <= 0) {
+                    closeIPO();
+                    return;
+                }
+                if (ipoSubpage && ipoSubpage.style.display !== 'none') {
+                    // Only update countdown label in-place to avoid resetting the slider
+                    const countEl = document.getElementById('ipo-countdown-live');
+                    if (countEl) {
+                        const c = ipoActive.countdown;
+                        countEl.textContent = c + '秒';
+                        countEl.style.color = c <= 15 ? '#ff5252' : c <= 30 ? '#ff9800' : '#4285f4';
+                    } else {
+                        renderIPOPage(); // first render when subpage just opened
+                    }
+                }
+                return;
+            }
+            // Schedule next IPO
+            ipoNextIn--;
+            if (ipoNextIn <= 0) {
+                generateIPO();
+                ipoNextIn = IPO_INTERVAL;
+            }
+
+            // 1% chance listed IPO stock delists (per tick = per second)
+            ipoListedStocks.forEach(code => {
+                if (Math.random() < 0.001) { // ~0.1%/s ≈ 1%/10s
+                    const stock = game.stocks.find(s => s.code === code);
+                    if (!stock) return;
+                    const ev = { tag:'bear', label:'退市', text:`⚠️ 【退市公告】${stock.name}(${code}) 因经营问题被强制退市，持仓清零！`, time:new Date().toLocaleTimeString(), impact: -1 };
+                    newsHistory.unshift(ev); if(newsHistory.length>30) newsHistory.pop(); latestNews=ev;
+                    // Close all positions for this stock
+                    game.positions = game.positions.filter(p => p.code !== code);
+                    game.stocks = game.stocks.filter(s => s.code !== code);
+                    delete game.candleData[code];
+                    ipoListedStocks = ipoListedStocks.filter(c => c !== code);
+                    if (game.currentCode === code) {
+                        game.currentCode = game.stocks[0] ? game.stocks[0].code : 'X001';
+                    }
+                    renderStockList();
+                    renderPosition();
+                    if (newsSubpage && newsSubpage.style.display !== 'none') renderNewsPage();
+                    updateAll();
+                }
+            });
+        }
+
+        // Run every second
+        setInterval(tickIPO, 1000);
+
+        function renderIPOPage() {
+            const cardEl = document.getElementById('ipo-issue-card');
+            const histEl = document.getElementById('ipo-history-list');
+            if (!cardEl) return;
+            // Snapshot current slider value before re-render (so it survives innerHTML replacement)
+            const existingSlider = document.getElementById('ipo-qty-slider');
+            if (existingSlider) ipoSliderPct = parseInt(existingSlider.value) || ipoSliderPct;
+
+            if (!ipoActive) {
+                const nextSec = ipoNextIn;
+                cardEl.innerHTML = `<div style="text-align:center;padding:20px;">
+                    <div style="font-size:32px;margin-bottom:8px;">🚀</div>
+                    <div style="font-weight:700;font-size:16px;color:#333;margin-bottom:6px;">暂无新股发行</div>
+                    <div style="font-size:13px;color:#999;">预计 <span style="color:#4285f4;font-weight:700;">${nextSec}</span> 秒后有新股发行</div>
+                </div>`;
+            } else {
+                const ipo = ipoActive;
+                const maxShares = Math.floor(game.cash / ipo.issuePrice);
+                const pctVal = ipoAppeared > 0 ? Math.round(ipoAppeared / Math.max(1, maxShares) * 100) : 25;
+                const urgencyColor = ipo.countdown <= 15 ? '#ff5252' : ipo.countdown <= 30 ? '#ff9800' : '#4285f4';
+                cardEl.innerHTML = `
+                <div style="background:linear-gradient(135deg,#667eea22,#764ba222);border-radius:12px;padding:14px;margin-bottom:12px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+                        <span style="font-weight:700;font-size:clamp(16px,4.5vw,20px);color:#333;">${ipo.name}</span>
+                        <span id="ipo-countdown-live" style="font-size:clamp(11px,3vw,13px);color:${urgencyColor};font-weight:700;">⏱ ${ipo.countdown}秒</span>
+                    </div>
+                    <div style="font-size:12px;color:#777;margin-bottom:10px;">代码：${ipo.code} · 发行量：${ipo.totalShares}股</div>
+                    <div style="display:flex;gap:12px;margin-bottom:10px;">
+                        <div style="flex:1;text-align:center;background:#fff;border-radius:8px;padding:8px;">
+                            <div style="font-size:11px;color:#999;margin-bottom:2px;">发行价</div>
+                            <div style="font-size:clamp(16px,4.5vw,20px);font-weight:700;color:#4285f4;">¥${ipo.issuePrice.toFixed(2)}</div>
+                        </div>
+                        <div style="flex:1;text-align:center;background:#fff;border-radius:8px;padding:8px;">
+                            <div style="font-size:11px;color:#999;margin-bottom:2px;">中签概率</div>
+                            <div style="font-size:clamp(16px,4.5vw,20px);font-weight:700;color:#00c48c;">30%</div>
+                        </div>
+                    </div>
+                </div>
+                ${ipoAppeared > 0 ? `
+                <div style="background:#e8f5e9;border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:13px;">
+                    ✅ 已申购 <strong>${ipoAppeared} 股</strong>，冻结资金 <strong>¥${(ipoAppeared * ipo.issuePrice).toLocaleString()}</strong>
+                </div>` : ''}
+                <div style="margin-bottom:10px;">
+                    <div style="display:flex;justify-content:space-between;font-size:12px;color:#555;margin-bottom:4px;">
+                        <span>申购数量</span>
+                        <span id="ipo-qty-label" style="font-weight:700;color:#4285f4;">${(function(){var pct=ipoAppeared>0?pctVal:ipoSliderPct;var qty=ipoAppeared>0?ipoAppeared:Math.max(1,Math.floor(maxShares*pct/100));return qty+' 股 · ¥'+(qty*ipo.issuePrice).toLocaleString();})()}</span>
+                    </div>
+                    <input type="range" id="ipo-qty-slider" min="1" max="100" step="1" value="${ipoAppeared > 0 ? pctVal : ipoSliderPct}"
+                        style="width:100%;accent-color:#4285f4;cursor:pointer;margin-bottom:10px;"
+                        oninput="(function(){
+                            var pct=parseInt(this.value);
+                            var maxS=Math.floor(window._gameCash/window._ipoPrice)||1;
+                            var qty=Math.max(1,Math.floor(maxS*pct/100));
+                            document.getElementById('ipo-qty-label').textContent=qty+' 股 · ¥'+(qty*window._ipoPrice).toLocaleString();
+                        }).call(this)">
+                </div>
+                <button onclick="window.applyIPO()" class="btn btn-primary" style="width:100%;padding:12px;font-size:clamp(14px,4vw,16px);"
+                    ${ipoAppeared > 0 ? 'disabled style="width:100%;padding:12px;font-size:clamp(14px,4vw,16px);opacity:0.5;"' : ''}>
+                    ${ipoAppeared > 0 ? '✅ 已申购（等待结果）' : '🚀 申购新股（30%中签）'}
+                </button>
+                <div style="font-size:11px;color:#999;margin-top:8px;text-align:center;">申购后资金冻结，中签即上市；未中签全额解冻</div>`;
+                window._gameCash = game.cash;
+                window._ipoPrice = ipo.issuePrice;
+            }
+
+            if (histEl) {
+                if (ipoHistory.length === 0) {
+                    histEl.innerHTML = '<div style="color:#999;text-align:center;padding:16px;font-size:clamp(12px,3.2vw,14px);">暂无申购记录</div>';
+                } else {
+                    histEl.innerHTML = ipoHistory.map(h => `
+                        <div class="history-item" style="display:flex;justify-content:space-between;align-items:center;">
+                            <div>
+                                <div style="font-weight:700;font-size:14px;">${h.name} <span style="font-size:11px;color:#999;">${h.code}</span></div>
+                                <div style="font-size:12px;color:#999;">${h.time}</div>
+                            </div>
+                            <div style="text-align:right;">
+                                <div style="font-weight:700;color:${h.result==='中签'?'#00c48c':'#ff5252'};">${h.result}</div>
+                                ${h.shares > 0 ? `<div style="font-size:12px;color:#555;">${h.shares}股 · ¥${h.cost.toLocaleString()}</div>` : ''}
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            }
+        }
+
+        window.applyIPO = function() {
+            if (!ipoActive) { alert('当前无IPO'); return; }
+            if (ipoAppeared > 0) { alert('已申购，请等待结果'); return; }
+            const slider = document.getElementById('ipo-qty-slider');
+            const pct = parseInt(slider ? slider.value : 25) || 25;
+            const maxShares = Math.floor(game.cash / ipoActive.issuePrice);
+            const qty = Math.max(1, Math.floor(maxShares * pct / 100));
+            const cost = qty * ipoActive.issuePrice;
+            if (game.cash < cost) { alert('现金不足'); return; }
+            if (qty < 1) { alert('申购数量不足'); return; }
+            game.cash -= cost;
+            ipoFrozen = cost;
+            ipoAppeared = qty;
+            updateAsset();
+            renderIPOPage();
         };
 
         // ==================== 银行贷款 ====================
@@ -3741,12 +4013,12 @@
             futLev = avail[futLevIdx];
             document.getElementById('fut-lev-btn').textContent = futLev + 'x';
         });
-        // 百分比快捷（期货）
+        // 百分比快捷（期货）— same color logic as market panel via data-percent CSS
         document.querySelectorAll('.fut-pct').forEach(btn => {
             btn.addEventListener('click', () => {
                 document.querySelectorAll('.fut-pct').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
-                const pct = parseInt(btn.dataset.pct) / 100;
+                const pct = parseInt(btn.dataset.percent) / 100;
                 const s = getCurrentStock(); if (!s) return;
                 const maxQ = Math.floor((game.cash * futLev) / s.price);
                 document.getElementById('fut-qty').value = Math.floor(maxQ * pct) || 1;
@@ -3854,15 +4126,35 @@
 
         // ==================== 存档系统 ====================
         function getSaveData() {
+            // Collect only IPO stocks (base stocks are static)
+            const ipoStocks = game.stocks.filter(s => s.isIPO);
+            const ipoCandles = {};
+            ipoStocks.forEach(s => { if (game.candleData[s.code]) ipoCandles[s.code] = game.candleData[s.code].slice(-20); });
             return JSON.stringify({
                 cash: game.cash,
                 positions: game.positions,
                 history: game.history.slice(-50),
                 ownedProperties: ownedProperties,
                 loanBalance: loanBalance,
+                loanInterestTotal: loanInterestTotal,
                 warehouse: warehouse,
                 charityTotal: charityTotal,
                 fundPositions: fundPositions,
+                redeemedCodes: redeemedCodes,
+                slOrders: slOrders,
+                limitOrders: limitOrders,
+                unlockedAchievements: unlockedAchievements,
+                peakAsset: peakAsset,
+                peakTime: peakTime,
+                milestones: milestones,
+                ipoHistory: ipoHistory,
+                ipoListedStocks: ipoListedStocks,
+                ipoStocks: ipoStocks,
+                ipoCandles: ipoCandles,
+                ipoFrozen: ipoFrozen,
+                ipoAppeared: ipoAppeared,
+                newsHistory: newsHistory.slice(0, 20),
+                gambleStones: gambleStones,
                 timestamp: Date.now()
             });
         }
@@ -3874,9 +4166,34 @@
                 if (d.history) game.history = d.history;
                 if (d.ownedProperties) Object.assign(ownedProperties, d.ownedProperties);
                 if (d.loanBalance !== undefined) loanBalance = d.loanBalance;
+                if (d.loanInterestTotal !== undefined) loanInterestTotal = d.loanInterestTotal;
                 if (d.warehouse) warehouse = d.warehouse;
                 if (d.charityTotal !== undefined) charityTotal = d.charityTotal;
                 if (d.fundPositions) fundPositions = d.fundPositions;
+                if (d.redeemedCodes) redeemedCodes = d.redeemedCodes;
+                if (d.slOrders) slOrders = d.slOrders;
+                if (d.limitOrders) limitOrders = d.limitOrders;
+                if (d.unlockedAchievements) unlockedAchievements = d.unlockedAchievements;
+                if (d.peakAsset !== undefined) peakAsset = d.peakAsset;
+                if (d.peakTime) peakTime = d.peakTime;
+                if (d.milestones) milestones = d.milestones;
+                if (d.ipoHistory) ipoHistory = d.ipoHistory;
+                if (d.ipoListedStocks) ipoListedStocks = d.ipoListedStocks;
+                if (d.ipoFrozen !== undefined) ipoFrozen = d.ipoFrozen;
+                if (d.ipoAppeared !== undefined) ipoAppeared = d.ipoAppeared;
+                if (d.newsHistory) { newsHistory = d.newsHistory; latestNews = newsHistory[0] || null; }
+                if (d.gambleStones) gambleStones = d.gambleStones;
+                // Restore IPO stocks and their candle data
+                if (d.ipoStocks && d.ipoStocks.length) {
+                    d.ipoStocks.forEach(s => {
+                        if (!game.stocks.find(x => x.code === s.code)) game.stocks.push(s);
+                    });
+                    if (d.ipoCandles) {
+                        Object.keys(d.ipoCandles).forEach(code => {
+                            game.candleData[code] = d.ipoCandles[code];
+                        });
+                    }
+                }
                 return true;
             } catch(e) { return false; }
         }
@@ -3893,6 +4210,7 @@
             if (!saved) { if(msg){msg.textContent='没有找到存档';msg.style.color='#ff5252';} return; }
             if (!confirm('确定要读取存档？当前进度将丢失。')) return;
             if (applySaveData(saved)) {
+                renderStockList();
                 updateAll(); renderPosition(); renderTradeHistory();
                 if(msg){msg.textContent='✅ 读档成功！';msg.style.color='#00c48c';}
             } else {
