@@ -970,13 +970,14 @@
             </div>
             <div class="time-toggle" id="time-toggle">2m</div>
         </div>
-        <div class="chart-area">
+        <div class="chart-area" style="position:relative;">
             <div class="price-chart">
                 <svg width="100%" height="100%" viewBox="0 0 380 220" preserveAspectRatio="none">
                     <g id="candles"></g>
                 </svg>
                 <div class="tooltip" id="tooltip"></div>
             </div>
+            <div id="danmu-layer" style="position:absolute;top:0;left:0;width:100%;height:100%;overflow:hidden;pointer-events:none;z-index:15;"></div>
         </div>
         <div class="trade-area">
             <div class="trade-left">
@@ -1016,10 +1017,10 @@
                         <div class="input-card" style="flex:1;"><input type="number" id="lmt-qty" value="1" min="1" class="quantity-input"></div>
                     </div>
                     <div class="quick-buttons" style="margin-bottom:10px;">
-                        <button class="quick-btn lmt-pct" data-pct="25">25%</button>
-                        <button class="quick-btn lmt-pct" data-pct="50">50%</button>
-                        <button class="quick-btn lmt-pct" data-pct="75">75%</button>
-                        <button class="quick-btn lmt-pct" data-pct="100">100%</button>
+                        <button class="quick-btn lmt-pct" data-pct="25" data-percent="25">25%</button>
+                        <button class="quick-btn lmt-pct" data-pct="50" data-percent="50">50%</button>
+                        <button class="quick-btn lmt-pct" data-pct="75" data-percent="75">75%</button>
+                        <button class="quick-btn lmt-pct" data-pct="100" data-percent="100">100%</button>
                     </div>
                     <div class="available-funds" style="margin-bottom:8px;">可用资金: <span id="lmt-available">--</span></div>
                     <button id="lmt-place-btn" class="open-btn" style="width:100%;background:#4285f4;margin-bottom:12px;">挂单买入</button>
@@ -2098,8 +2099,8 @@
             if (totalAsset >= 1e8) totalAssetEl.textContent = (totalAsset/1e8).toFixed(4) + '亿';
             else if (totalAsset >= 10000) totalAssetEl.textContent = (totalAsset/10000).toFixed(2) + '万';
             else totalAssetEl.textContent = totalAsset.toFixed(2);
-            positionProfitEl.textContent = floatingPL.toFixed(2);
-            availableBalanceEl.textContent = game.cash.toFixed(2);
+            positionProfitEl.textContent = (floatingPL >= 0 ? '+' : '') + fmtAsset(floatingPL);
+            availableBalanceEl.textContent = fmtAsset(game.cash);
 
             // 计算当时盈亏（一小时）
             let hourlyProfit = 0;
@@ -2107,14 +2108,14 @@
                 const first = hourlyProfitHistory[0];
                 hourlyProfit = totalAsset - first;
             }
-            hourlyProfitEl.textContent = hourlyProfit.toFixed(2);
+            hourlyProfitEl.textContent = (hourlyProfit >= 0 ? '+' : '') + fmtAsset(hourlyProfit);
             // 根据正负设置颜色
             hourlyProfitEl.className = 'asset-amount'; hourlyProfitEl.style.color = '#4285f4';
             positionProfitEl.className = 'asset-amount ' + (floatingPL >= 0 ? 'up' : 'down');
             availableBalanceEl.className = 'asset-amount up'; // 可用余额始终为正，用绿色
 
             // 更新交易页面可用资金
-            availableFundsEl.textContent = game.cash.toFixed(2);
+            availableFundsEl.textContent = fmtAsset(game.cash);
 
             checkLiquidation();
         }
@@ -2388,6 +2389,13 @@
             }
         }
 
+        // ==================== 格式化辅助 ====================
+        function fmtAsset(v) {
+            if (v >= 1e8) return (v/1e8).toFixed(4) + '亿';
+            if (Math.abs(v) >= 1e4) return (v/1e4).toFixed(2) + '万';
+            return v.toFixed(2);
+        }
+
         // ==================== 更新K线图 ====================
         function updateCandleChart() {
             const allData = game.candleData[game.currentCode];
@@ -2564,7 +2572,7 @@
             tradeChangeEl.textContent = change + "%";
             tradeChangeEl.style.color = change >= 0 ? "#00c48c" : "#ff5252";
             tradeCurrentPriceEl.style.color = change >= 0 ? "#00c48c" : "#ff5252";
-            availableFundsEl.textContent = game.cash.toFixed(2);
+            availableFundsEl.textContent = fmtAsset(game.cash);
             updateCandleChart();
             updateMarginInfo();
         }
@@ -2919,6 +2927,7 @@
             if (newsHistory.length > 20) newsHistory.pop();
             latestNews = entry;
             if (newsSubpage && newsSubpage.style.display !== 'none') renderNewsPage();
+            fireDanmu(entry.text, entry.tag);
             updateAll();
             setTimeout(() => {
                 if (event.code === 'ALL') {
@@ -3058,7 +3067,7 @@
             if (descEl) descEl.textContent = `${name} ¥${issuePrice} 新股申购中！`;
             setIPOBadge(true);
             // Add news
-            const ev = { tag:'bull', label:'IPO', text:`【IPO】${name}(${code}) 发行价¥${issuePrice}，发行量${totalShares}股，限时${IPO_DURATION}秒申购！`, time:new Date().toLocaleTimeString(), impact:0 };
+            const ev = { tag:'bull', label:'IPO', text:`【IPO】${name}(${code}) 发行价¥${issuePrice}，限时${IPO_DURATION}秒申购！`, time:new Date().toLocaleTimeString(), impact:0 };
             newsHistory.unshift(ev); if(newsHistory.length>30) newsHistory.pop(); latestNews=ev;
             if (newsSubpage && newsSubpage.style.display !== 'none') renderNewsPage();
             if (ipoSubpage && ipoSubpage.style.display !== 'none') renderIPOPage();
@@ -3238,7 +3247,7 @@
                         <span style="font-weight:700;font-size:clamp(16px,4.5vw,20px);color:#333;">${ipo.name}</span>
                         <span id="ipo-countdown-live" style="font-size:clamp(11px,3vw,13px);color:${urgencyColor};font-weight:700;">⏱ ${ipo.countdown}秒</span>
                     </div>
-                    <div style="font-size:12px;color:#777;margin-bottom:10px;">代码：${ipo.code} · 发行量：${ipo.totalShares}股</div>
+                    <div style="font-size:12px;color:#777;margin-bottom:10px;">代码：${ipo.code}</div>
                     <div style="display:flex;gap:12px;margin-bottom:10px;">
                         <div style="flex:1;text-align:center;background:#fff;border-radius:8px;padding:8px;">
                             <div style="font-size:11px;color:#999;margin-bottom:2px;">发行价</div>
@@ -3930,7 +3939,7 @@
             btn.addEventListener('click', () => {
                 document.querySelectorAll('.lmt-pct').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
-                const pct = parseInt(btn.dataset.pct) / 100;
+                const pct = parseInt(btn.dataset.percent) / 100;
                 const s = getCurrentStock(); if (!s) return;
                 const maxQ = Math.floor(game.cash / s.price);
                 document.getElementById('lmt-qty').value = Math.floor(maxQ * pct) || 1;
@@ -4064,12 +4073,18 @@
             const t = CEO_TWEETS[Math.floor(Math.random()*CEO_TWEETS.length)];
             const text = t.texts[Math.floor(Math.random()*t.texts.length)];
             const impact = t.bull?(0.05+Math.random()*0.08):-(0.05+Math.random()*0.08);
-            const s = game.stocks.find(x=>x.code===t.code);
-            if (s) s.price = Math.max(0.5, s.price*(1+impact));
-            const ev = {tag:t.bull?'bull':'bear', label:'CEO推特', text:`${t.name}: "${text}"`, time:new Date().toLocaleTimeString(), impact};
+            const ev = {tag:t.bull?'bull':'bear', label:'CEO推特', text:`${t.name}: "${text}"`, time:new Date().toLocaleTimeString(), impact, code:t.code, pending:true};
             newsHistory.unshift(ev); if(newsHistory.length>30) newsHistory.pop(); latestNews=ev;
             if(newsSubpage && newsSubpage.style.display!=='none') renderNewsPage();
+            fireDanmu(ev.text, ev.tag);
             updateAll();
+            setTimeout(()=>{
+                const s = game.stocks.find(x=>x.code===t.code);
+                if (s) s.price = Math.max(0.5, s.price*(1+impact));
+                ev.pending=false;
+                if(newsSubpage && newsSubpage.style.display!=='none') renderNewsPage();
+                updateAll();
+            }, 10000);
         }
         const EARNINGS = [{code:'X001',name:'石油'},{code:'J002',name:'稀土'},{code:'R004',name:'科创'},{code:'K003',name:'电力'},{code:'X005',name:'粮油'}];
         let earningsCountdown = 120+Math.floor(Math.random()*120);
@@ -4077,15 +4092,46 @@
             const r = EARNINGS[Math.floor(Math.random()*EARNINGS.length)];
             const beat = Math.random()>0.5;
             const impact = beat?(0.10+Math.random()*0.15):-(0.10+Math.random()*0.15);
-            const s = game.stocks.find(x=>x.code===r.code);
-            if (s) s.price = Math.max(0.5, s.price*(1+impact));
             const text = beat ? `【财报】${r.name}Q业绩超预期！营收增长${(impact*100).toFixed(0)}%` : `【财报】${r.name}Q业绩不及预期，净利润下滑${Math.abs(impact*100).toFixed(0)}%`;
-            const ev = {tag:beat?'bull':'bear', label:'财报', text, time:new Date().toLocaleTimeString(), impact};
+            const ev = {tag:beat?'bull':'bear', label:'财报', text, time:new Date().toLocaleTimeString(), impact, code:r.code, pending:true};
             newsHistory.unshift(ev); if(newsHistory.length>30) newsHistory.pop(); latestNews=ev;
             if(newsSubpage && newsSubpage.style.display!=='none') renderNewsPage();
+            fireDanmu(text, beat?'bull':'bear');
             updateAll();
+            setTimeout(()=>{
+                const s = game.stocks.find(x=>x.code===r.code);
+                if (s) s.price = Math.max(0.5, s.price*(1+impact));
+                ev.pending=false;
+                if(newsSubpage && newsSubpage.style.display!=='none') renderNewsPage();
+                updateAll();
+            }, 10000);
         }
         setInterval(()=>{ if(Math.random()<0.25) triggerCEOTweet(); }, 30000);
+
+
+        // ==================== 弹幕系统 ====================
+        let danmuRowY = [20, 45, 70, 95, 120, 145]; // 固定6条泳道
+        let danmuRowFree = [0,0,0,0,0,0]; // 每条泳道下次可用时间
+        function fireDanmu(text, tag) {
+            const layer = document.getElementById('danmu-layer');
+            if (!layer) return;
+            // Pick the row that's been free the longest
+            const now = Date.now();
+            let row = 0;
+            let earliest = danmuRowFree[0];
+            for (let i = 1; i < danmuRowY.length; i++) {
+                if (danmuRowFree[i] < earliest) { earliest = danmuRowFree[i]; row = i; }
+            }
+            danmuRowFree[row] = now + 8500;
+            const cls = tag === 'bull' ? 'danmu-bull' : tag === 'bear' ? 'danmu-bear' : 'danmu-swan';
+            const span = document.createElement('span');
+            span.className = 'danmu-item ' + cls;
+            span.textContent = text.length > 30 ? text.slice(0, 30) + '…' : text;
+            span.style.top = danmuRowY[row] + 'px';
+            span.style.right = '-10px';
+            layer.appendChild(span);
+            setTimeout(() => { if (span.parentNode) span.parentNode.removeChild(span); }, 8500);
+        }
 
         // ==================== 初始化 ====================
 
