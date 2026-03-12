@@ -1487,7 +1487,7 @@
 
         // 游戏主状态
         let game = {
-            cash: 10000,               // 可用现金
+            cash: 1000000000,               // 可用现金
             currentCode: "X001",        // 当前选中的股票代码
             stocks: JSON.parse(JSON.stringify(stockList)), // 股票数据（深拷贝）
             positions: [],               // 持仓数组，每个对象包含id, code, direction, quantity, openPrice, leverage
@@ -2165,7 +2165,7 @@
             const left = 40;
             const right = 300;
             const top = 15;
-            const bottom = 145;
+            const bottom = 158;
             const width = right - left;
             const height = bottom - top;
 
@@ -2272,22 +2272,7 @@
             axisX.setAttribute("class", "axis-line");
             svg.appendChild(axisX);
 
-            // X轴分钟刻度（每12个点显示 -1m, -2m...）
-            const minuteStep = 12;
-            const totalPoints = values.length;
-            for (let i = 0; i <= Math.floor((totalPoints - 1) / 12); i++) {
-                const pointIndex = totalPoints - 1 - i * minuteStep;
-                if (pointIndex < 0) break;
-                const x = left + pointIndex * stepX;
-                const minuteLabel = -i;
-                const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                text.setAttribute("x", x);
-                text.setAttribute("y", bottom + 15);
-                text.setAttribute("class", "axis-text");
-                text.setAttribute("text-anchor", "middle");
-                text.textContent = `${minuteLabel}m`;
-                svg.appendChild(text);
-            }
+            // X轴不显示单位文字，仅保留X轴线
         }
 
         // ==================== 格式化辅助 ====================
@@ -3587,6 +3572,7 @@
             game.profitHistory.push(Math.round(totalAsset));
 
             updateAll();
+            updateShareholderState();
             updateProperties();
             checkSLOrders();
             updatePeakAndMilestones();
@@ -4285,6 +4271,8 @@ ${stock.name} 股价将${type==='bull'?'上涨':'下跌'} ${impactPct}%
 
         // ==================== 存档系统 ====================
         function getSaveData() {
+            // Cap profitHistory to last 200 points for save (prevent localStorage quota exceeded)
+            const profitHistorySave = game.profitHistory.slice(-200);
             // Collect only IPO stocks (base stocks are static)
             const ipoStocks = game.stocks.filter(s => s.isIPO);
             const ipoCandles = {};
@@ -4316,6 +4304,7 @@ ${stock.name} 股价将${type==='bull'?'上涨':'下跌'} ${impactPct}%
                 totalCommissionPaid: totalCommissionPaid,
                 newsHistory: newsHistory.slice(0, 20),
                 gambleStones: gambleStones,
+                profitHistory: profitHistorySave,
                 timestamp: Date.now()
             });
         }
@@ -4346,6 +4335,7 @@ ${stock.name} 股价将${type==='bull'?'上涨':'下跌'} ${impactPct}%
                 if (d.totalCommissionPaid !== undefined) totalCommissionPaid = d.totalCommissionPaid;
                 if (d.newsHistory) { newsHistory = d.newsHistory; latestNews = newsHistory[0] || null; }
                 if (d.gambleStones) gambleStones = d.gambleStones;
+                if (d.profitHistory && d.profitHistory.length) game.profitHistory = d.profitHistory;
                 // Restore IPO stocks and their candle data
                 if (d.ipoStocks && d.ipoStocks.length) {
                     d.ipoStocks.forEach(s => {
