@@ -2051,20 +2051,45 @@
                 else if (p.leverage === 1 && p.direction === "long") tag = '<span style="background:#00c48c;color:#fff;border-radius:4px;padding:1px 5px;font-size:11px;margin-left:4px;">现货</span>';
                 else tag = '<span style="background:#607d8b;color:#fff;border-radius:4px;padding:1px 5px;font-size:11px;margin-left:4px;">合约</span>';
                 let liqHtml = '';
-                if (!(p.leverage === 1 && p.direction === "long")) {
-                    const liqPrice = p.direction === "long"
-                        ? p.openPrice * (1 - 1 / p.leverage)
-                        : p.openPrice * (1 + 1 / p.leverage);
-                    const marginAmt = p.margin != null ? p.margin : (p.quantity * p.openPrice / p.leverage);
-                    const marginPct = p.leverage > 1 ? (1 / p.leverage * 100).toFixed(0) + '%' : '100%';
-                    liqHtml = '<div class="history-row" style="margin-top:2px;"><div style="color:#ff9800;">爆仓价：' + liqPrice.toFixed(2) + '</div>'
-                        + '<div style="color:#888;">' + (p.leverage > 1 ? '杠杆：' + p.leverage + 'x&nbsp;·&nbsp;' : '') + '<span style="color:#4285f4;font-weight:600;">保证金 ' + marginPct + '（¥' + fmtNum(marginAmt) + '）</span></div></div>';
+                if (p.isFutures || (p.leverage && p.leverage > 1)) {
+                    const lev = p.leverage || 1;
+                    let liqPriceStr;
+                    if (lev <= 1) {
+                        liqPriceStr = '—'; // 1x杠杆无爆仓
+                    } else {
+                        const liqPrice = p.direction === "long"
+                            ? p.openPrice * (1 - 1 / lev)
+                            : p.openPrice * (1 + 1 / lev);
+                        liqPriceStr = liqPrice.toFixed(2);
+                    }
+                    const marginAmt = p.margin != null ? p.margin : (p.quantity * p.openPrice / lev);
+                    const marginPct = (1 / lev * 100).toFixed(0) + '%';
+                    liqHtml = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">'
+                        + '<span style="color:#ff9800;font-size:13px;">爆仓价 <b>' + liqPriceStr + '</b></span>'
+                        + '<span style="font-size:13px;color:#888;">杠杆 <b style="color:#555;">' + lev + 'x</b>'
+                        + '&ensp;<span style="color:#4285f4;font-weight:600;">保证金 ' + marginPct + '（¥' + fmtNum(marginAmt) + '）</span></span>'
+                        + '</div>';
                 }
-                html += '<div class="history-item" data-position-id="' + p.id + '">'
-                    + '<div class="history-row"><div style="display:flex;align-items:center;flex-wrap:wrap;gap:2px;"><span style="font-weight:700;">' + stock.name + '</span><span style="color:' + dirColor + ';font-weight:600;margin-left:2px;">' + dirText + '</span>' + tag + '</div><div style="color:#888;">x' + fmtNum(p.quantity) + '</div></div>'
-                    + '<div class="history-row" style="margin-top:4px;"><div>开仓价：<span style="font-weight:600;">' + p.openPrice.toFixed(2) + '</span></div><div>浮盈：<span style="font-weight:700;color:' + (pl >= 0 ? '#00c48c' : '#ff5252') + '">' + (pl >= 0 ? '+' : '') + fmtNum(pl) + '</span></div></div>'
+                const btnLabel = (!p.isFutures && p.leverage === 1 && p.direction === 'long') ? '卖出' : '平仓';
+                html += '<div class="history-item" data-position-id="' + p.id + '" style="padding:12px 0;">'
+                    // 第一行：股票名 + 方向 + 类型标签 | 数量
+                    + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">'
+                    +   '<div style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;">'
+                    +     '<span style="font-weight:700;font-size:15px;">' + stock.name + '</span>'
+                    +     '<span style="color:' + dirColor + ';font-weight:700;font-size:13px;">[' + dirText + ']</span>'
+                    +     tag
+                    +   '</div>'
+                    +   '<span style="color:#888;font-size:13px;">×' + fmtNum(p.quantity) + '股</span>'
+                    + '</div>'
+                    // 第二行：开仓价 | 浮盈
+                    + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:' + (liqHtml ? '5px' : '8px') + ';">'
+                    +   '<span style="color:#555;font-size:13px;">开仓价 <b style="color:#222;">' + p.openPrice.toFixed(2) + '</b></span>'
+                    +   '<span style="font-size:13px;">浮盈 <b style="color:' + (pl >= 0 ? '#00c48c' : '#ff5252') + ';">' + (pl >= 0 ? '+' : '') + fmtNum(pl) + '</b></span>'
+                    + '</div>'
+                    // 第三行（仅杠杆仓位）：爆仓价 | 杠杆+保证金
                     + liqHtml
-                    + '<button class="single-close-btn" data-id="' + p.id + '" style="margin-top:8px;">' + ((!p.isFutures && p.leverage===1 && p.direction==='long') ? '卖出' : '平仓') + '</button>'
+                    // 平仓按钮
+                    + '<button class="single-close-btn" data-id="' + p.id + '" style="margin-top:8px;width:100%;">' + btnLabel + '</button>'
                     + '</div>';
             });
             positionListEl.innerHTML = html;
@@ -2846,7 +2871,7 @@
             '宏图新能','鑫源材料','银河航天','泰和生物','东方算力','晶锐光学',
             '远望智能','浩博传媒','铭德精工','天启储能','洲际物流','顺达电商'
         ];
-        const IPO_USED_NAMES = new Set();
+        let IPO_USED_NAMES = new Set();
 
         let ipoActive = null;       // 当前发行中的IPO: {code,name,issuePrice,totalShares,countdown,applicants,frozenCash}
         let ipoHistory = [];        // 申购记录
@@ -2895,6 +2920,8 @@
         }
 
                 function generateIPO() {
+            // 同步已有股票名（包含存档恢复的IPO股票），防止名称重复
+            game.stocks.forEach(s => IPO_USED_NAMES.add(s.name));
             const availNames = IPO_STOCK_NAMES.filter(n => !IPO_USED_NAMES.has(n));
             if (!availNames.length) return;
             const name = availNames[Math.floor(Math.random() * availNames.length)];
@@ -4575,7 +4602,7 @@
             const totalAsset = getTotalAsset();
             el.innerHTML = FUNDS.map(f => {
                 const pos = fundPositions[f.id];
-                const vipBonus = ownedProperties['villa'] ? 0.03 : 0;
+                const vipBonus = ownedProperties["villa"] ? 0.01 : 0;
                 // pos.invested is already compounded (updateFunds reinvests each cycle)
                 const currentVal = pos ? pos.invested : 0;
                 if (f.type === 'commercial') {
@@ -4588,21 +4615,21 @@
                         + '<div style="font-weight:700;font-size:15px;margin-bottom:2px;">' + f.name + '</div>'
                         + '<div style="font-size:12px;color:#888;margin-bottom:6px;">' + f.desc + '</div>'
                         + '<div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:8px;">'
-                        + '<span>每20秒收益：<span style="color:#00c48c;">+' + (f.rate*100).toFixed(1) + '%</span>' + (ownedProperties['villa'] ? '<span style="color:#ff9800;font-size:11px;"> +贵宾3% = <span style="color:#ff5722;font-weight:700;">' + ((f.rate+0.03)*100).toFixed(1) + '%</span></span>' : '') + '</span>'
-                        + (pos ? '<span style="color:#4285f4;">持有中：¥' + currentVal.toFixed(0) + '</span>' : '')
+                        + '<span>每20秒收益：<span style="color:#00c48c;">+' + (f.rate*100).toFixed(1) + '%</span>' + (ownedProperties['villa'] ? '<span style="color:#ff9800;font-size:11px;"> +贵宾1% = <span style="color:#ff5722;font-weight:700;">' + ((f.rate+0.01)*100).toFixed(1) + '%</span></span>' : '') + '</span>'
+                        + (pos ? '<span style="color:#4285f4;">持有中：¥' + fmtNum(currentVal) + '</span>' : '')
                         + '</div>'
                         + '<div style="margin-bottom:8px;">'
                         + '<div style="display:flex;justify-content:space-between;font-size:12px;color:#555;margin-bottom:4px;">'
                         + '<span>投入金额</span>'
-                        + '<span id="' + labelId + '" style="font-weight:700;color:#4285f4;">¥' + defaultAmt.toLocaleString() + ' (' + defaultPct + '%)</span>'
+                        + '<span id="' + labelId + '" style="font-weight:700;color:#4285f4;">¥' + fmtNum(defaultAmt) + ' (' + defaultPct + '%)</span>'
                         + '</div>'
                         + '<input type="range" id="' + sliderId + '" min="5" max="100" step="5" value="' + defaultPct + '" '
                         + 'style="width:100%;accent-color:#4285f4;cursor:pointer;" '
-                        + 'oninput="(function(){var pct=this.value;var cash=window._gameCash||0;var ta=window._totalAsset||0;var mx=Math.floor(Math.min(cash,ta)/100)*100;var amt=Math.max(' + f.minInvest + ',Math.floor(mx*pct/100/100)*100);document.getElementById(\'' + labelId + '\').textContent=\'¥\'+amt.toLocaleString()+\'(\'+pct+\'%)\';}).call(this)">'
+                        + 'oninput="(function(){var pct=this.value;var cash=window._gameCash||0;var ta=window._totalAsset||0;var mx=Math.floor(Math.min(cash,ta)/100)*100;var amt=Math.max(' + f.minInvest + ',Math.floor(mx*pct/100/100)*100);var s=amt>=1e8?(amt/1e8).toFixed(1)+\'亿\':amt>=1e4?(amt/1e4).toFixed(1)+\'万\':amt.toFixed(2);document.getElementById(\'' + labelId + '\').textContent=\'¥\'+s+\'(\'+pct+\'%)\';}).call(this)">'
                         + '</div>'
                         + '<div style="display:flex;gap:8px;">'
                         + '<button onclick="window.buyFundSlider(\'' + f.id + '\',' + f.minInvest + ',\'' + sliderId + '\')" class="btn btn-primary" style="flex:1;padding:9px;">投入</button>'
-                        + (pos ? '<button onclick="window.redeemFund(\'' + f.id + '\')" class="btn btn-danger" style="flex:1;padding:9px;">赎回 ¥' + currentVal.toFixed(0) + '</button>' : '')
+                        + (pos ? '<button onclick="window.redeemFund(\'' + f.id + '\')" class="btn btn-danger" style="flex:1;padding:9px;">赎回 ¥' + fmtNum(currentVal) + '</button>' : '')
                         + '</div></div>';
                 } else {
                     const csliderId = 'charity-slider';
@@ -4613,14 +4640,14 @@
                     return '<div class="history-item">'
                         + '<div style="font-weight:700;font-size:15px;margin-bottom:2px;">' + f.name + '</div>'
                         + '<div style="font-size:12px;color:#888;margin-bottom:4px;">' + f.desc + '</div>'
-                        + '<div style="font-size:12px;color:#e91e63;margin-bottom:10px;">❤️ 累计捐款：¥' + charityTotal.toLocaleString() + '</div>'
+                        + '<div style="font-size:12px;color:#e91e63;margin-bottom:10px;">❤️ 累计捐款：¥' + fmtNum(charityTotal) + '</div>'
                         + '<div style="display:flex;justify-content:space-between;font-size:12px;color:#555;margin-bottom:4px;">'
                         + '<span>捐款金额</span>'
-                        + '<span id="' + clabelId + '" style="font-weight:700;color:#e91e63;">¥' + cdefaultAmt.toLocaleString() + ' (' + cdefaultPct + '%)</span>'
+                        + '<span id="' + clabelId + '" style="font-weight:700;color:#e91e63;">¥' + fmtNum(cdefaultAmt) + ' (' + cdefaultPct + '%)</span>'
                         + '</div>'
                         + '<input type="range" id="' + csliderId + '" min="1" max="100" step="1" value="' + cdefaultPct + '" '
                         + 'style="width:100%;accent-color:#e91e63;cursor:pointer;margin-bottom:10px;" '
-                        + 'oninput="(function(){var pct=this.value;var cash=window._gameCash||0;var mx=Math.floor(cash/100)*100;var amt=Math.max(100,Math.floor(mx*pct/100/100)*100);document.getElementById(\'charity-label\').textContent=\'¥\'+amt.toLocaleString()+\'(\'+pct+\'%)\';}).call(this)">'
+                        + 'oninput="(function(){var pct=this.value;var cash=window._gameCash||0;var mx=Math.floor(cash/100)*100;var amt=Math.max(100,Math.floor(mx*pct/100/100)*100);var s=amt>=1e8?(amt/1e8).toFixed(1)+\'亿\':amt>=1e4?(amt/1e4).toFixed(1)+\'万\':amt.toFixed(2);document.getElementById(\'charity-label\').textContent=\'¥\'+s+\'(\'+pct+\'%)\';}).call(this)">'
                         + '<button onclick="window.donateCharitySlider()" class="btn btn-primary" style="width:100%;padding:10px;background:#e91e63;">❤️ 确认捐款</button>'
                         + '</div>';
                 }
@@ -4686,7 +4713,7 @@
                 if (!pos || pos.invested <= 0) return;
                 const f = FUNDS.find(x => x.id === id);
                 if (!f || f.type !== 'commercial' || f.rate <= 0) return;
-                const vipBonus = ownedProperties['villa'] ? 0.03 : 0;
+                const vipBonus = ownedProperties["villa"] ? 0.01 : 0;
                 // Payout = invested × (rate + vipBonus) each cycle
                 const payout = pos.invested * (f.rate + vipBonus);
                 pos.invested += payout; // reinvest: compound growth
@@ -4712,22 +4739,32 @@
             el.innerHTML = '<div class="card" style="margin:0 0 12px;">'
                 + '<div class="card-title">贵宾资格</div>'
                 + (hasVilla
-                    ? '<div style="color:#00c48c;font-weight:700;font-size:15px;">✅ 贵宾会员</div><div style="color:#888;font-size:12px;margin-top:6px;">每60秒自动赠送📱手机17（¥12,000）存入仓库</div>'
+                    ? '<div style="color:#00c48c;font-weight:700;font-size:15px;">✅ 贵宾会员</div><div style="color:#888;font-size:12px;margin-top:6px;">每60秒随机赠送一只股票500股现货</div>'
                     : '<div style="color:#999;font-size:14px;">需购买顶级别墅方可解锁</div><div style="color:#4285f4;margin-top:6px;font-size:12px;">→ 综合 > 房产投资 > 顶级别墅</div>')
                 + '</div><div class="card" style="margin:0;"><div class="card-title">贵宾专属福利</div>'
-                + '<div style="font-size:14px;color:#555;line-height:2.2;">👑 期货杠杆解锁50倍<br>📱 每60秒手机17 x1（售¥12,000）<br>📊 理财利率额外+3%<br>💳 交易手续费减少0.2%</div></div>';
+                + '<div style="font-size:14px;color:#555;line-height:2.2;">👑 期货杠杆解锁50倍<br>🎁 每60秒随机赠送1只股票500股现货<br>📊 理财利率额外+1%<br>💳 交易手续费减少0.2%</div></div>';
         }
         function processVipBenefit() {
             if (!ownedProperties['villa']) return;
             vipAppleTimer++;
-            if (vipAppleTimer >= 12) { vipAppleTimer = 0; addToWarehouse('📱 手机17', 1, 12000, '📱'); }
+            if (vipAppleTimer >= 12) {
+                vipAppleTimer = 0;
+                // 随机赠送一只股票500股现货
+                const stock = game.stocks[Math.floor(Math.random() * game.stocks.length)];
+                const giftQty = 500;
+                const posId = 'vip_' + Date.now();
+                game.positions.push({ id: posId, code: stock.code, direction: 'long', quantity: giftQty, openPrice: stock.price, leverage: 1 });
+                const ev = { tag: 'bull', label: '贵宾福利', text: `🎁 贵宾福利：赠送 ${stock.name} ×${giftQty}股（均价¥${stock.price.toFixed(2)}）`, time: new Date().toLocaleTimeString(), impact: 0 };
+                newsHistory.unshift(ev); if (newsHistory.length > 30) newsHistory.pop(); latestNews = ev;
+                updateAsset(); renderPosition();
+            }
         }
 
         // ==================== 别墅购买 ====================
         window.buyVilla = function() {
             if (game.cash < 20000000) { alert('需要¥2000万现金购买顶级别墅'); return; }
             if (ownedProperties['villa']) { alert('已拥有顶级别墅'); return; }
-            if (!confirm('确认花费 ¥2000万购买顶级别墅？\n解锁：50x杠杆 + 贵宾服务 + 每分钟获得手机17')) return;
+            if (!confirm('确认花费 ¥2000万购买顶级别墅？\n解锁：50x杠杆 + 贵宾服务 + 每分钟赠送随机股票500股')) return;
             game.cash -= 20000000;
             ownedProperties['villa'] = { owned: true };
             updateAsset(); renderProperties();
