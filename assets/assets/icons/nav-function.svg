@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 28" fill="none">
+  <!-- Grid of 4 squares -->
+  <rect x="3" y="3" width="10" height="10" rx="2.5" fill="#4285f4" opacity="0.9"/>
+  <rect x="15" y="3" width="10" height="10" rx="2.5" fill="#00c48c" opacity="0.9"/>
+  <rect x="3" y="15" width="10" height="10" rx="2.5" fill="#ff9800" opacity="0.9"/>
+  <rect x="15" y="15" width="10" height="10" rx="2.5" fill="#ff5252" opacity="0.9"/>
+  <!-- Inner icons -->
+  <!-- building -->
+  <rect x="6.5" y="7" width="3" height="3" rx="0.5" fill="#fff" opacity="0.8"/>
+  <!-- lightning -->
+  <polygon points="19.5,5.5 18,10 20,10 18.5,13.5 22,8 20,8" fill="#fff" opacity="0.9"/>
+  <!-- home -->
+  <path d="M6.5 18.5 L8 17 L9.5 18.5 L9.5 22.5 L6.5 22.5 Z" fill="#fff" opacity="0.8"/>
+  <!-- star -->
+  <polygon points="20,17 20.8,19.5 23.5,19.5 21.3,21.2 22.1,23.7 20,22 17.9,23.7 18.7,21.2 16.5,19.5 19.2,19.5" fill="#fff" opacity="0.8" transform="scale(0.7) translate(9,7)"/>
+</svg>

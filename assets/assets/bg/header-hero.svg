@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 375 120" fill="none">
+  <defs>
+    <linearGradient id="hg" x1="0" y1="0" x2="375" y2="120" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1a237e"/>
+      <stop offset="100%" stop-color="#1565c0"/>
+    </linearGradient>
+    <filter id="blur1">
+      <feGaussianBlur stdDeviation="18"/>
+    </filter>
+  </defs>
+  <rect width="375" height="120" fill="url(#hg)"/>
+  <!-- Decorative circles -->
+  <circle cx="320" cy="20" r="60" fill="#4285f4" opacity="0.15" filter="url(#blur1)"/>
+  <circle cx="40" cy="90" r="50" fill="#00c48c" opacity="0.12" filter="url(#blur1)"/>
+  <!-- Grid lines -->
+  <line x1="0" y1="30" x2="375" y2="30" stroke="#ffffff" stroke-width="0.4" opacity="0.08"/>
+  <line x1="0" y1="60" x2="375" y2="60" stroke="#ffffff" stroke-width="0.4" opacity="0.08"/>
+  <line x1="0" y1="90" x2="375" y2="90" stroke="#ffffff" stroke-width="0.4" opacity="0.08"/>
+  <line x1="75" y1="0" x2="75" y2="120" stroke="#ffffff" stroke-width="0.4" opacity="0.08"/>
+  <line x1="150" y1="0" x2="150" y2="120" stroke="#ffffff" stroke-width="0.4" opacity="0.08"/>
+  <line x1="225" y1="0" x2="225" y2="120" stroke="#ffffff" stroke-width="0.4" opacity="0.08"/>
+  <line x1="300" y1="0" x2="300" y2="120" stroke="#ffffff" stroke-width="0.4" opacity="0.08"/>
+  <!-- Mini chart line -->
+  <polyline points="20,90 55,75 90,80 130,60 175,65 220,45 270,50 320,35 370,40"
+    stroke="#00c48c" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity="0.6"/>
+  <!-- Glow dot at end -->
+  <circle cx="370" cy="40" r="3" fill="#00c48c" opacity="0.9"/>
+  <circle cx="370" cy="40" r="6" fill="#00c48c" opacity="0.25"/>
+</svg>
