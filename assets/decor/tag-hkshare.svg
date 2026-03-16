@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 20" fill="none">
+  <rect width="44" height="20" rx="5" fill="#431407"/>
+  <rect width="44" height="20" rx="5" fill="none" stroke="#fb923c" stroke-width="0.7" opacity="0.6"/>
+  <text x="22" y="14" text-anchor="middle" font-size="9.5" font-weight="800" fill="#fb923c" font-family="-apple-system,sans-serif" letter-spacing="0.04em">港 股</text>
+</svg>

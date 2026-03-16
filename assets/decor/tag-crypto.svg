@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 20" fill="none">
+  <rect width="44" height="20" rx="5" fill="#2e1065"/>
+  <rect width="44" height="20" rx="5" fill="none" stroke="#c084fc" stroke-width="0.7" opacity="0.6"/>
+  <text x="22" y="14" text-anchor="middle" font-size="9.5" font-weight="800" fill="#c084fc" font-family="-apple-system,sans-serif" letter-spacing="0.04em">加 密</text>
+</svg>

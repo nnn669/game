@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 24" fill="none">
+  <defs>
+    <linearGradient id="bearBadge" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#450a0a"/>
+      <stop offset="100%" stop-color="#7f1d1d"/>
+    </linearGradient>
+  </defs>
+  <rect width="80" height="24" rx="6" fill="url(#bearBadge)"/>
+  <rect width="80" height="24" rx="6" fill="none" stroke="#f87171" stroke-width="0.7" opacity="0.5"/>
+  <!-- Down triangle -->
+  <polygon points="10,9 14,16 18,9" fill="#f87171"/>
+  <text x="24" y="16.5" font-size="9" font-weight="700" fill="#f87171" font-family="-apple-system,sans-serif" letter-spacing="0.03em">空头市场</text>
+</svg>

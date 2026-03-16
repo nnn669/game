@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 20" fill="none">
+  <rect width="44" height="20" rx="5" fill="#0c1a4e"/>
+  <rect width="44" height="20" rx="5" fill="none" stroke="#60a5fa" stroke-width="0.7" opacity="0.6"/>
+  <text x="22" y="14" text-anchor="middle" font-size="9.5" font-weight="800" fill="#60a5fa" font-family="-apple-system,sans-serif" letter-spacing="0.04em">美 股</text>
+</svg>

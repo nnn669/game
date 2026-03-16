@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 390 844" fill="none">
+  <defs>
+    <linearGradient id="pageBg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#060d1a"/>
+      <stop offset="40%" stop-color="#0a1628"/>
+      <stop offset="100%" stop-color="#0d1b2e"/>
+    </linearGradient>
+    <radialGradient id="orb1" cx="75%" cy="15%" r="35%">
+      <stop offset="0%" stop-color="#1d4ed8" stop-opacity="0.22"/>
+      <stop offset="100%" stop-color="#1d4ed8" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="orb2" cx="20%" cy="60%" r="30%">
+      <stop offset="0%" stop-color="#0d9488" stop-opacity="0.14"/>
+      <stop offset="100%" stop-color="#0d9488" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="orb3" cx="85%" cy="80%" r="25%">
+      <stop offset="0%" stop-color="#7c3aed" stop-opacity="0.1"/>
+      <stop offset="100%" stop-color="#7c3aed" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="390" height="844" fill="url(#pageBg)"/>
+  <!-- Ambient color orbs -->
+  <rect width="390" height="844" fill="url(#orb1)"/>
+  <rect width="390" height="844" fill="url(#orb2)"/>
+  <rect width="390" height="844" fill="url(#orb3)"/>
+  <!-- Fine grid -->
+  <line x1="0" y1="78" x2="390" y2="78" stroke="#fff" stroke-width="0.25" opacity="0.04"/>
+  <line x1="0" y1="156" x2="390" y2="156" stroke="#fff" stroke-width="0.25" opacity="0.04"/>
+  <line x1="0" y1="234" x2="390" y2="234" stroke="#fff" stroke-width="0.25" opacity="0.04"/>
+  <line x1="0" y1="312" x2="390" y2="312" stroke="#fff" stroke-width="0.25" opacity="0.04"/>
+  <line x1="0" y1="390" x2="390" y2="390" stroke="#fff" stroke-width="0.25" opacity="0.04"/>
+  <line x1="0" y1="468" x2="390" y2="468" stroke="#fff" stroke-width="0.25" opacity="0.04"/>
+  <line x1="78" y1="0" x2="78" y2="844" stroke="#fff" stroke-width="0.25" opacity="0.04"/>
+  <line x1="156" y1="0" x2="156" y2="844" stroke="#fff" stroke-width="0.25" opacity="0.04"/>
+  <line x1="234" y1="0" x2="234" y2="844" stroke="#fff" stroke-width="0.25" opacity="0.04"/>
+  <line x1="312" y1="0" x2="312" y2="844" stroke="#fff" stroke-width="0.25" opacity="0.04"/>
+  <!-- Scattered stars/dots -->
+  <circle cx="42" cy="55" r="0.8" fill="#fff" opacity="0.3"/>
+  <circle cx="187" cy="123" r="1" fill="#60a5fa" opacity="0.4"/>
+  <circle cx="310" cy="78" r="0.7" fill="#fff" opacity="0.25"/>
+  <circle cx="65" cy="280" r="0.9" fill="#34d399" opacity="0.35"/>
+  <circle cx="355" cy="340" r="0.8" fill="#fff" opacity="0.2"/>
+  <circle cx="140" cy="450" r="1.1" fill="#60a5fa" opacity="0.3"/>
+  <circle cx="280" cy="520" r="0.7" fill="#fff" opacity="0.25"/>
+  <circle cx="30" cy="600" r="0.9" fill="#fbbf24" opacity="0.25"/>
+  <circle cx="370" cy="680" r="0.8" fill="#fff" opacity="0.2"/>
+</svg>

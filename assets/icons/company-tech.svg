@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
+  <defs>
+    <linearGradient id="techBg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0c1a33"/>
+      <stop offset="100%" stop-color="#0f2248"/>
+    </linearGradient>
+    <linearGradient id="techAccent" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#60a5fa"/>
+      <stop offset="100%" stop-color="#2563eb"/>
+    </linearGradient>
+    <filter id="techGlow">
+      <feGaussianBlur stdDeviation="1.2" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+  <circle cx="24" cy="24" r="22" fill="url(#techBg)"/>
+  <circle cx="24" cy="24" r="21" fill="none" stroke="#1e3a8a" stroke-width="0.8"/>
+  <!-- CPU chip body -->
+  <rect x="14" y="14" width="20" height="20" rx="3" fill="#1e293b" stroke="url(#techAccent)" stroke-width="1.2"/>
+  <!-- Inner grid -->
+  <rect x="18" y="18" width="12" height="12" rx="1.5" fill="#0f172a" stroke="#334155" stroke-width="0.8"/>
+  <!-- Circuit traces - top -->
+  <line x1="18" y1="12" x2="18" y2="14" stroke="#60a5fa" stroke-width="1.2" stroke-linecap="round"/>
+  <line x1="22" y1="12" x2="22" y2="14" stroke="#60a5fa" stroke-width="1.2" stroke-linecap="round"/>
+  <line x1="26" y1="12" x2="26" y2="14" stroke="#60a5fa" stroke-width="1.2" stroke-linecap="round"/>
+  <line x1="30" y1="12" x2="30" y2="14" stroke="#60a5fa" stroke-width="1.2" stroke-linecap="round"/>
+  <!-- bottom -->
+  <line x1="18" y1="34" x2="18" y2="36" stroke="#60a5fa" stroke-width="1.2" stroke-linecap="round"/>
+  <line x1="22" y1="34" x2="22" y2="36" stroke="#60a5fa" stroke-width="1.2" stroke-linecap="round"/>
+  <line x1="26" y1="34" x2="26" y2="36" stroke="#60a5fa" stroke-width="1.2" stroke-linecap="round"/>
+  <line x1="30" y1="34" x2="30" y2="36" stroke="#60a5fa" stroke-width="1.2" stroke-linecap="round"/>
+  <!-- left -->
+  <line x1="12" y1="18" x2="14" y2="18" stroke="#60a5fa" stroke-width="1.2" stroke-linecap="round"/>
+  <line x1="12" y1="22" x2="14" y2="22" stroke="#60a5fa" stroke-width="1.2" stroke-linecap="round"/>
+  <line x1="12" y1="26" x2="14" y2="26" stroke="#60a5fa" stroke-width="1.2" stroke-linecap="round"/>
+  <line x1="12" y1="30" x2="14" y2="30" stroke="#60a5fa" stroke-width="1.2" stroke-linecap="round"/>
+  <!-- right -->
+  <line x1="34" y1="18" x2="36" y2="18" stroke="#60a5fa" stroke-width="1.2" stroke-linecap="round"/>
+  <line x1="34" y1="22" x2="36" y2="22" stroke="#60a5fa" stroke-width="1.2" stroke-linecap="round"/>
+  <line x1="34" y1="26" x2="36" y2="26" stroke="#60a5fa" stroke-width="1.2" stroke-linecap="round"/>
+  <line x1="34" y1="30" x2="36" y2="30" stroke="#60a5fa" stroke-width="1.2" stroke-linecap="round"/>
+  <!-- Center glow dot -->
+  <circle cx="24" cy="24" r="3" fill="#3b82f6" filter="url(#techGlow)"/>
+  <circle cx="24" cy="24" r="1.5" fill="#93c5fd"/>
+</svg>

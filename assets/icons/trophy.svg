@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 28" fill="none">
+  <defs>
+    <linearGradient id="tg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fde68a"/>
+      <stop offset="50%" stop-color="#fbbf24"/>
+      <stop offset="100%" stop-color="#b45309"/>
+    </linearGradient>
+    <linearGradient id="tg2" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fef3c7"/>
+      <stop offset="100%" stop-color="#fbbf24"/>
+    </linearGradient>
+    <filter id="tglow">
+      <feGaussianBlur stdDeviation="1" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+  <!-- Cup body -->
+  <path d="M8 4 H20 V13 Q20 20 14 21 Q8 20 8 13 Z" fill="url(#tg)"/>
+  <!-- Cup shine -->
+  <path d="M10 5 Q11 9 10.5 13" stroke="#fef3c7" stroke-width="1.2" stroke-linecap="round" opacity="0.7"/>
+  <!-- Handles -->
+  <path d="M8 7 Q4 7 4 11 Q4 14 8 14" stroke="url(#tg)" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <path d="M20 7 Q24 7 24 11 Q24 14 20 14" stroke="url(#tg)" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <!-- Stem -->
+  <rect x="12.5" y="21" width="3" height="3" fill="url(#tg)"/>
+  <!-- Base -->
+  <rect x="8.5" y="24" width="11" height="2.5" rx="1.2" fill="url(#tg)"/>
+  <!-- Star glow inside -->
+  <polygon points="14,8 14.8,10.5 17.5,10.5 15.3,12.2 16.1,14.7 14,13 11.9,14.7 12.7,12.2 10.5,10.5 13.2,10.5" fill="#fff7ed" opacity="0.85" filter="url(#tglow)" transform="scale(0.8) translate(3.5,1)"/>
+</svg>

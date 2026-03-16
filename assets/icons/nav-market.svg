@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <defs>
+    <linearGradient id="gUp" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#10d9a0"/>
+      <stop offset="100%" stop-color="#059669"/>
+    </linearGradient>
+    <linearGradient id="gDn" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f87171"/>
+      <stop offset="100%" stop-color="#dc2626"/>
+    </linearGradient>
+  </defs>
+  <!-- Candle 1 - bullish -->
+  <line x1="6.5" y1="5" x2="6.5" y2="8.5" stroke="url(#gUp)" stroke-width="1.2" stroke-linecap="round"/>
+  <rect x="4.5" y="8.5" width="4" height="10" rx="1" fill="url(#gUp)"/>
+  <line x1="6.5" y1="18.5" x2="6.5" y2="22" stroke="url(#gUp)" stroke-width="1.2" stroke-linecap="round"/>
+  <!-- Candle 2 - bearish -->
+  <line x1="14" y1="4" x2="14" y2="7" stroke="url(#gDn)" stroke-width="1.2" stroke-linecap="round"/>
+  <rect x="12" y="7" width="4" height="8" rx="1" fill="url(#gDn)"/>
+  <line x1="14" y1="15" x2="14" y2="19" stroke="url(#gDn)" stroke-width="1.2" stroke-linecap="round"/>
+  <!-- Candle 3 - bullish tall -->
+  <line x1="21.5" y1="6" x2="21.5" y2="9" stroke="url(#gUp)" stroke-width="1.2" stroke-linecap="round"/>
+  <rect x="19.5" y="9" width="4" height="12" rx="1" fill="url(#gUp)"/>
+  <line x1="21.5" y1="21" x2="21.5" y2="25" stroke="url(#gUp)" stroke-width="1.2" stroke-linecap="round"/>
+  <!-- Candle 4 - bearish small -->
+  <line x1="29" y1="9" x2="29" y2="11.5" stroke="url(#gDn)" stroke-width="1.2" stroke-linecap="round"/>
+  <rect x="27" y="11.5" width="4" height="6" rx="1" fill="url(#gDn)"/>
+  <line x1="29" y1="17.5" x2="29" y2="20" stroke="url(#gDn)" stroke-width="1.2" stroke-linecap="round"/>
+  <!-- Baseline -->
+  <line x1="2" y1="28" x2="30" y2="28" stroke="#334155" stroke-width="0.8" stroke-linecap="round"/>
+</svg>
